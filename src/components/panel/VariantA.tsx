@@ -2,12 +2,13 @@ import { VerticalSwitch } from "./VerticalSwitch";
 import { PRESETS, RIZE, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight, LightBank } from "./IndicatorLights";
+import { SpotifyWidget } from "./SpotifyWidget";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p }: { p: Panel }) {
   return (
     <div className="grid h-full grid-cols-[440px_1fr] divide-x divide-border">
-      <section className="flex flex-col gap-4 p-5">
+      <section className="flex flex-col gap-3 p-5">
         <div data-on={p.lights} className="lights-card flex h-36 items-center justify-between rounded-md border-2 border-border px-6 transition-colors">
           <div className="text-left">
             <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Master lights</div>
@@ -24,11 +25,14 @@ export function VariantA({ p }: { p: Panel }) {
             ))}
           </div>
         </div>
-        <div className="mt-auto">
-          <Label>Today</Label>
-          <Row k="Hours worked" v={fmtMin(TODAY.hoursWorkedMin)} />
-          <Row k="Tasks done" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
-          <Row k="Focus time" v={fmtMin(TODAY.focusMin)} />
+        <div className="mt-auto flex flex-col gap-3">
+          <div>
+            <Label>Today</Label>
+            <Row k="Hours worked" v={fmtMin(TODAY.hoursWorkedMin)} />
+            <Row k="Tasks done" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
+            <Row k="Focus time" v={fmtMin(TODAY.focusMin)} />
+          </div>
+          <SpotifyWidget />
         </div>
       </section>
       <section className="flex flex-col">
