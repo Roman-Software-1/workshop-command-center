@@ -1,4 +1,4 @@
-import { Power } from "lucide-react";
+import { VerticalSwitch } from "./VerticalSwitch";
 import { PRESETS, RIZE, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight, LightBank } from "./IndicatorLights";
@@ -8,21 +8,19 @@ export function VariantA({ p }: { p: Panel }) {
   return (
     <div className="grid h-full grid-cols-[440px_1fr] divide-x divide-border">
       <section className="flex flex-col gap-4 p-5">
-        <button onClick={() => p.setLights(!p.lights)} className={`flex h-28 items-center justify-between rounded-md border-2 px-6 ${p.lights ? "border-primary bg-primary/10 status-glow" : "border-border"}`}>
+        <div data-on={p.lights} className="lights-card flex h-36 items-center justify-between rounded-md border-2 border-border px-6 transition-colors">
           <div className="text-left">
             <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Master lights</div>
-            <div className="font-mono text-4xl font-extrabold">{p.lights ? "ON" : "OFF"}</div>
+            <div className="font-mono text-4xl font-extrabold" style={{ color: p.lights ? "var(--preset-work)" : undefined }}>{p.lights ? "ON" : "OFF"}</div>
+            <LightBank className={`mt-3 ${p.lights ? "opacity-100" : "opacity-30"}`} />
           </div>
-          <div className="flex flex-col items-end gap-4">
-            <Power className={`h-12 w-12 ${p.lights ? "text-primary" : "text-muted-foreground"}`} />
-            <LightBank className={p.lights ? "opacity-100" : "opacity-30"} />
-          </div>
-        </button>
+          <VerticalSwitch on={p.lights} onToggle={() => p.setLights(!p.lights)} />
+        </div>
         <div>
           <Label>Presets</Label>
           <div className="grid grid-cols-4 gap-2">
             {PRESETS.map((x) => (
-              <button key={x.id} onClick={() => p.setPreset(x.id)} className={`h-14 rounded-md border font-mono text-sm uppercase ${p.preset === x.id ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>{x.label}</button>
+              <button key={x.id} onClick={() => p.setPreset(x.id)} style={{ "--c": `var(--preset-${x.id})` } as React.CSSProperties} className={`h-14 rounded-md border-2 font-mono text-sm uppercase transition-all ${p.preset === x.id ? "border-[var(--c)] bg-[var(--c)]/20 text-[var(--c)] shadow-[0_0_16px_-2px_var(--c)]" : "border-border text-[var(--c)]/70"}`}>{x.label}</button>
             ))}
           </div>
         </div>
@@ -49,7 +47,7 @@ export function VariantA({ p }: { p: Panel }) {
         </div>
         <div className="grid grid-cols-3 gap-2 border-b border-border p-3">
           {(["in", "break", "out"] as const).map((s) => (
-            <button key={s} onClick={() => p.setStatus(s)} className={`h-12 rounded-md border font-mono text-sm uppercase ${p.status === s ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
+            <button key={s} onClick={() => p.setStatus(s)} style={{ "--c": `var(--status-${s})` } as React.CSSProperties} className={`h-12 rounded-md border-2 font-mono text-sm uppercase transition-all active:scale-95 ${p.status === s ? "border-[var(--c)] bg-[var(--c)] text-primary-foreground shadow-[0_0_20px_-2px_var(--c)]" : "border-[var(--c)]/40 text-[var(--c)]"}`}>
               {s === "in" ? "Clock in" : s === "break" ? "Break" : "Clock out"}
             </button>
           ))}
