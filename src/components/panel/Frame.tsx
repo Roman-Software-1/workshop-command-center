@@ -12,11 +12,11 @@ const VARIANTS = [
 // Fixed 1024x600 canvas with the status border.
 export function Frame({ status, variant, children }: { status: WorkStatus; variant: string; children: ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center stage-bg p-4">
+    <div className="panel-stage flex items-center justify-center stage-bg">
       <div
         data-status={status}
         data-variant={variant}
-        className="panel-root status-frame relative h-[600px] w-[1024px] overflow-hidden rounded-xl bg-background font-sans text-foreground"
+        className="panel-root status-frame relative h-[600px] w-[1024px] shrink-0 overflow-hidden rounded-xl bg-background font-sans text-foreground"
       >
         {children}
         <StatusBurst status={status} />
