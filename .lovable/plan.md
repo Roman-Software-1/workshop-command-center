@@ -41,3 +41,11 @@ Dark, high-contrast "workshop instrument panel": near-black background, status c
 ## Technical details
 - Rewrite `src/routes/index.tsx`; components in `src/components/panel/`; mock data in `src/lib/panel-data.ts`.
 - Status color tokens (oklch) in `src/styles.css`; fonts via root head `<link>`; update head metadata.
+
+## Variations (start with three, refine from there)
+Same content and status border in each, different look. A small tab bar at the top lets you switch between them on the screen itself.
+- A: Instrument Panel — near-black, monospace numbers, thin dividers, industrial gauge feel.
+- B: Big Tiles — chunky rounded touch tiles, bold colors, glove-friendly, maximum readability.
+- C: Clean Minimal — soft dark gray, lots of spacing, large clock as the hero, subtle cards.
+
+Each lives at its own page (/a, /b, /c) with the home page linking to all three. Once you pick favorites, we'll branch more variations from the winner.
