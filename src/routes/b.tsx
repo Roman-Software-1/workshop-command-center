@@ -10,6 +10,8 @@ export const Route = createFileRoute("/b")({
       { name: "description", content: "Workshop touchscreen panel, Big Tiles style." },
       { property: "og:title", content: "Workshop Panel — Big Tiles" },
       { property: "og:description", content: "Workshop touchscreen panel, Big Tiles style." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,

@@ -1,13 +1,15 @@
 import { Coffee, LogIn, LogOut, Power, Check } from "lucide-react";
 import { PRESETS, RIZE, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
+import { IndicatorLight, LightBank } from "./IndicatorLights";
 
 // B: Big tiles — chunky, glove-friendly.
 export function VariantB({ p }: { p: Panel }) {
   return (
     <div className="grid h-full grid-cols-[1fr_1.15fr] gap-3 p-4">
       <div className="grid grid-rows-[1.3fr_auto_1fr] gap-3">
-        <button onClick={() => p.setLights(!p.lights)} className={`flex flex-col items-center justify-center gap-2 rounded-3xl ${p.lights ? "bg-primary text-primary-foreground status-glow" : "bg-tile text-muted-foreground"}`}>
+        <button onClick={() => p.setLights(!p.lights)} className={`relative flex flex-col items-center justify-center gap-2 rounded-3xl ${p.lights ? "bg-primary text-primary-foreground status-glow" : "bg-tile text-muted-foreground"}`}>
+          <LightBank contrast={p.lights} effect="beacon" lightClassName="h-2.5 w-2.5" className="absolute right-5 top-5" />
           <Power className="h-16 w-16" strokeWidth={2.5} />
           <span className="font-display text-3xl uppercase">Lights {p.lights ? "on" : "off"}</span>
         </button>
@@ -29,7 +31,10 @@ export function VariantB({ p }: { p: Panel }) {
             <div className="text-sm text-muted-foreground">{p.date}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-bold uppercase text-primary">{STATUS_LABEL[p.status]}</div>
+            <div className="flex items-center justify-end gap-2 text-sm font-bold uppercase text-primary">
+              <IndicatorLight effect="beacon" className="h-2.5 w-2.5" />
+              {STATUS_LABEL[p.status]}
+            </div>
             <div className="font-mono text-2xl font-bold">{p.timer}</div>
           </div>
         </div>

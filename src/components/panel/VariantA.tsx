@@ -1,6 +1,7 @@
 import { Power } from "lucide-react";
 import { PRESETS, RIZE, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
+import { IndicatorLight, LightBank } from "./IndicatorLights";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p }: { p: Panel }) {
@@ -12,7 +13,10 @@ export function VariantA({ p }: { p: Panel }) {
             <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Master lights</div>
             <div className="font-mono text-4xl font-extrabold">{p.lights ? "ON" : "OFF"}</div>
           </div>
-          <Power className={`h-12 w-12 ${p.lights ? "text-primary" : "text-muted-foreground"}`} />
+          <div className="flex flex-col items-end gap-4">
+            <Power className={`h-12 w-12 ${p.lights ? "text-primary" : "text-muted-foreground"}`} />
+            <LightBank className={p.lights ? "opacity-100" : "opacity-30"} />
+          </div>
         </button>
         <div>
           <Label>Presets</Label>
@@ -36,7 +40,10 @@ export function VariantA({ p }: { p: Panel }) {
             <div className="mt-1 text-sm text-muted-foreground">{p.date}</div>
           </div>
           <div className="text-right">
-            <div className="font-mono text-xs uppercase tracking-[0.3em] text-primary">● {STATUS_LABEL[p.status]}</div>
+            <div className="flex items-center justify-end gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+              <IndicatorLight className="h-2 w-2" />
+              {STATUS_LABEL[p.status]}
+            </div>
             <div className="font-mono text-3xl">{p.timer}</div>
           </div>
         </div>

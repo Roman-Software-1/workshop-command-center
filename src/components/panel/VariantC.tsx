@@ -1,17 +1,19 @@
 import { Lightbulb } from "lucide-react";
 import { PRESETS, RIZE, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
+import { IndicatorLight, LightBank } from "./IndicatorLights";
 
 // C: Clean minimal — clock is the hero.
 export function VariantC({ p }: { p: Panel }) {
   return (
     <div className="grid h-full grid-cols-[300px_1fr]">
       <aside className="flex flex-col gap-5 bg-card p-6">
-        <button onClick={() => p.setLights(!p.lights)} className="flex items-center gap-4">
+        <button onClick={() => p.setLights(!p.lights)} className="flex w-full items-center gap-4">
           <span className={`relative h-12 w-[88px] rounded-full transition ${p.lights ? "bg-primary" : "bg-muted"}`}>
             <span className={`absolute top-1 h-10 w-10 rounded-full bg-foreground transition-all ${p.lights ? "left-11" : "left-1"}`} />
           </span>
           <span className="text-left"><span className="block text-lg font-medium">All lights</span><span className="text-sm text-muted-foreground">{p.lights ? "On" : "Off"}</span></span>
+          <LightBank effect="soft" lightClassName="h-1.5 w-1.5" className={`ml-auto ${p.lights ? "opacity-100" : "opacity-30"}`} />
         </button>
         <div className="flex flex-col gap-1">
           {PRESETS.map((x) => (
@@ -30,7 +32,7 @@ export function VariantC({ p }: { p: Panel }) {
         <div className="text-sm text-muted-foreground">{p.date}</div>
         <div className="text-[112px] font-light leading-none tracking-tight">{p.time}</div>
         <div className="mt-3 flex items-center gap-4">
-          <span className="flex items-center gap-2 text-primary"><span className="h-2.5 w-2.5 rounded-full bg-primary" />{STATUS_LABEL[p.status]}</span>
+          <span className="flex items-center gap-2 text-primary"><IndicatorLight effect="soft" className="h-2.5 w-2.5" />{STATUS_LABEL[p.status]}</span>
           <span className="font-mono text-muted-foreground">{p.timer}</span>
           <div className="ml-auto flex gap-2">
             {(["in", "break", "out"] as const).map((s) => (

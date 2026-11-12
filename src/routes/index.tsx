@@ -7,6 +7,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Three design options for the 1024x600 workshop touchscreen." },
       { property: "og:title", content: "Workshop Panel — Pick a design" },
       { property: "og:description", content: "Three design options for the 1024x600 workshop touchscreen." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
