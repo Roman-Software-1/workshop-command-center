@@ -25,3 +25,10 @@ export const STATUS_LABEL: Record<WorkStatus, string> = { in: "Clocked in", brea
 export function fmtMin(m: number) {
   return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
 }
+
+// Sample weekly hours (null = day not reached yet).
+export const WEEK_GOAL = 8;
+export const WEEK: { day: string; h: number | null }[] = [
+  { day: "Mon", h: 7.5 }, { day: "Tue", h: 8.6 }, { day: "Wed", h: 6.2 },
+  { day: "Thu", h: 9.1 }, { day: "Fri", h: 5.2 }, { day: "Sat", h: null }, { day: "Sun", h: null },
+];
