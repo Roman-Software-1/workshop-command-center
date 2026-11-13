@@ -73,7 +73,7 @@ export function VariantA({ p }: { p: Panel }) {
         </div>
       </section>
     </div>
-    <div className="border-t border-border px-5 py-3"><SpotifyWidget /></div>
+    <div className="flex items-center justify-center border-t border-border bg-card/40 px-5 py-3"><SpotifyWidget /></div>
     </div>
   );
 }
