@@ -353,9 +353,13 @@
   box-shadow: 0 0 18px var(--preset-work);
 }
 
+.vswitch-lg .vswitch-track { width: 84px; height: 230px; border-radius: 14px; }
+.vswitch-lg .vswitch-paddle { height: 104px; top: calc(100% - 108px); border-radius: 10px; }
+.vswitch-lg[data-on="true"] .vswitch-paddle { top: 4px; }
+
 /* Lit room glow behind lights card when on */
 .lights-card[data-on="true"] {
-  background: radial-gradient(circle at 80% 50%, color-mix(in oklch, var(--preset-work) 22%, transparent), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--preset-work) 22%, transparent), transparent 70%);
   border-color: var(--preset-work);
 }
 

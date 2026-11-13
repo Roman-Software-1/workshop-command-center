@@ -9,25 +9,23 @@ export function VariantA({ p }: { p: Panel }) {
   return (
     <div className="flex h-full flex-col">
     <div className="grid min-h-0 flex-1 grid-cols-[440px_1fr] divide-x divide-border">
-      <section className="flex flex-col gap-6 p-5">
-        <div data-on={p.lights} className="lights-card flex h-44 shrink-0 items-center justify-between rounded-md border-2 border-border px-6 transition-colors">
-          <div className="text-left">
-            <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Master lights</div>
-            <div className="font-mono text-4xl font-extrabold" style={{ color: p.lights ? "var(--preset-work)" : undefined }}>{p.lights ? "ON" : "OFF"}</div>
-            <LightBank className={`mt-3 ${p.lights ? "opacity-100" : "opacity-30"}`} />
+      <section className="grid min-h-0 grid-cols-[128px_1fr] gap-4 p-5">
+        <div data-on={p.lights} className="lights-card flex flex-col items-center justify-between rounded-md border-2 border-border px-2 py-5 transition-colors">
+          <div className="text-center">
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Lights</div>
+            <div className="font-mono text-3xl font-extrabold" style={{ color: p.lights ? "var(--preset-work)" : undefined }}>{p.lights ? "ON" : "OFF"}</div>
           </div>
-          <VerticalSwitch on={p.lights} onToggle={() => p.setLights(!p.lights)} />
+          <VerticalSwitch on={p.lights} onToggle={() => p.setLights(!p.lights)} large />
+          <LightBank className={p.lights ? "opacity-100" : "opacity-30"} />
         </div>
-        <div>
+        <div className="flex min-h-0 flex-col">
           <Label>Presets</Label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {PRESETS.map((x) => (
               <button key={x.id} onClick={() => p.setPreset(x.id)} style={{ "--c": `var(--preset-${x.id})` } as React.CSSProperties} className={`h-16 rounded-md border-2 font-mono text-sm uppercase transition-all ${p.preset === x.id ? "border-[var(--c)] bg-[var(--c)]/20 text-[var(--c)] shadow-[0_0_16px_-2px_var(--c)]" : "border-border text-[var(--c)]/70"}`}>{x.label}</button>
             ))}
           </div>
-        </div>
-        <div className="mt-auto flex flex-col gap-3">
-          <div>
+          <div className="mt-auto">
             <Label>Today</Label>
             <Row k="Hours worked" v={fmtMin(TODAY.hoursWorkedMin)} />
             <Row k="Tasks done" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
