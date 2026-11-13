@@ -29,15 +29,15 @@ export function VariantA({ p }: { p: Panel }) {
         <section className="flex min-h-0 flex-col">
           {/* Hero: clock + hours worked */}
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
-            <div className="px-6 py-5">
+            <div className="px-6 py-3">
               <Label>Hours worked</Label>
-              <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
-              <div className="mt-3 font-mono text-lg text-muted-foreground">
+              <div className="font-mono text-5xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
+              <div className="mt-2 font-mono text-base text-muted-foreground">
                 Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
               </div>
             </div>
-            <div className="px-6 py-5">
-              <div className="font-mono text-5xl font-extrabold leading-none">{p.time}</div>
+            <div className="px-6 py-3">
+              <div className="font-mono text-4xl font-extrabold leading-none">{p.time}</div>
               <div className="mt-2 text-sm text-muted-foreground">{p.date}</div>
               <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 <IndicatorLight className="h-2 w-2" />
@@ -46,9 +46,9 @@ export function VariantA({ p }: { p: Panel }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 border-b border-border p-4">
+          <div className="grid shrink-0 grid-cols-3 gap-3 border-b border-border p-3">
             {(["in", "break", "out"] as const).map((s) => (
-              <button key={s} onClick={() => p.setStatus(s)} style={{ "--c": `var(--status-${s})` } as React.CSSProperties} className={`h-14 rounded-md border-2 font-mono text-base uppercase transition-all active:scale-95 ${p.status === s ? "border-[var(--c)] bg-[var(--c)] text-primary-foreground shadow-[0_0_20px_-2px_var(--c)]" : "border-[var(--c)]/40 text-[var(--c)]"}`}>
+              <button key={s} onClick={() => p.setStatus(s)} style={{ "--c": `var(--status-${s})` } as React.CSSProperties} className={`h-12 rounded-md border-2 font-mono text-base uppercase transition-all active:scale-95 ${p.status === s ? "border-[var(--c)] bg-[var(--c)] text-primary-foreground shadow-[0_0_20px_-2px_var(--c)]" : "border-[var(--c)]/40 text-[var(--c)]"}`}>
                 {s === "in" ? "Clock in" : s === "break" ? "Break" : "Clock out"}
               </button>
             ))}
@@ -65,13 +65,13 @@ export function VariantA({ p }: { p: Panel }) {
             <MonthHeatmap />
           </div>
 
-          <div className="grid grid-cols-4 border-t border-border font-mono">
+          <div className="grid shrink-0 grid-cols-4 border-t border-border font-mono">
             <Gauge k="Tasks" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
             <Gauge k="Focus time" v={fmtMin(TODAY.focusMin)} />
             <Gauge k="Focus score" v={`${RIZE.focusScore}`} />
             <Gauge k={RIZE.topCategory} v={`${RIZE.topCategoryPct}%`} />
           </div>
-          <div className="border-t border-border px-4 py-3"><SpotifyWidget /></div>
+          <div className="shrink-0 border-t border-border px-4 py-2"><SpotifyWidget /></div>
         </section>
       </div>
     </div>
@@ -79,7 +79,7 @@ export function VariantA({ p }: { p: Panel }) {
 }
 const Label = ({ children }: { children: React.ReactNode }) => <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">{children}</div>;
 const Gauge = ({ k, v }: { k: string; v: string }) => (
-  <div className="border-r border-border px-5 py-3 last:border-r-0"><div className="truncate text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div><div className="text-2xl font-extrabold">{v}</div></div>
+  <div className="border-r border-border px-5 py-2 last:border-r-0"><div className="truncate text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div><div className="text-2xl font-extrabold">{v}</div></div>
 );
 
 function WeekChart() {
@@ -125,10 +125,10 @@ function MonthHeatmap() {
     h == null ? 0 : h === 0 ? 0.08 : h < 4 ? 0.3 : h < 7 ? 0.55 : h < 9 ? 0.8 : 1;
   const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
-    <div className="flex min-h-0 flex-col px-4 pt-4 pb-3">
+    <div className="flex min-h-0 flex-col px-4 pt-3 pb-2">
       <Label>{MONTH.label}</Label>
       <div className="mb-2 font-mono text-xs text-muted-foreground">{total.toFixed(0)}h logged</div>
-      <div className="grid grid-cols-7 gap-1.5 font-mono text-[10px] text-muted-foreground">
+      <div className="grid w-[148px] shrink-0 self-center grid-cols-7 gap-1 font-mono text-[10px] text-muted-foreground">
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i} className="text-center">{d}</div>)}
         {cells.map((h, i) => (
           <div

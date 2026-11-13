@@ -9,7 +9,7 @@ const VARIANTS = [
   { to: "/c", label: "C" },
 ] as const;
 
-// Native-size canvas with the status border; A uses the corrected screen height.
+// Native 1024x600 canvas with the status border; no content scaling.
 export function Frame({ status, variant, children }: { status: WorkStatus; variant: string; children: ReactNode }) {
   return (
     <div className="panel-stage flex items-center justify-center stage-bg">
