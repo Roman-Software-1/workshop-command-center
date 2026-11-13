@@ -30,3 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Keep design A at the physical screen's native dimensions, using layout spacing rather than transforms or stretched content; B and C remain legacy design previews.
+- Scope low-motion styles to design A and remove its finite status overlay when its animation ends, so idle rendering does not retain animated effects or invisible overlays.

@@ -21,7 +21,7 @@ export function VariantA({ p }: { p: Panel }) {
               <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Lights</div>
               <div className="font-mono text-5xl font-extrabold" style={{ color: p.lights ? "var(--preset-work)" : undefined }}>{p.lights ? "ON" : "OFF"}</div>
             </div>
-            <div className="pointer-events-none"><VerticalSwitch on={p.lights} onToggle={() => {}} large /></div>
+            <div className="pointer-events-none"><VerticalSwitch on={p.lights} onToggle={() => {}} large decorative /></div>
             <LightBank className={p.lights ? "opacity-100" : "opacity-30"} />
           </button>
         </section>

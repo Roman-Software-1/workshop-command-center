@@ -282,8 +282,8 @@
   --preset-night: oklch(0.65 0.18 300);
 }
 
-/* Animated status border: chasing light around the frame */
-.status-frame::before {
+/* Legacy previews only: design A has no chase pseudo-element. */
+.status-frame:not([data-variant="a"])::before {
   content: "";
   position: absolute;
   inset: -6px;
@@ -297,8 +297,8 @@
   pointer-events: none;
   z-index: 30;
 }
-.panel-root[data-status="break"].status-frame { animation: frame-breathe 2.4s ease-in-out infinite; }
-.panel-root[data-status="out"].status-frame::before { animation-duration: 14s; opacity: 0.5; }
+.panel-root:not([data-variant="a"])[data-status="break"].status-frame { animation: frame-breathe 2.4s ease-in-out infinite; }
+.panel-root:not([data-variant="a"])[data-status="out"].status-frame::before { animation-duration: 14s; opacity: 0.5; }
 @property --chase-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes chase { to { --chase-angle: 360deg; } }
 @keyframes frame-breathe {
@@ -330,6 +330,31 @@
   20% { transform: scale(1.1); opacity: 1; }
   70% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.05); opacity: 0; }
+}
+
+/* Software-rendered Pi: no idle animation or animated shadow in A. */
+.panel-root[data-variant="a"] .indicator-light,
+.panel-root[data-variant="a"] .spotify-eq > span {
+  animation: none;
+  opacity: 1;
+}
+.panel-root[data-variant="a"][data-status="break"].status-frame {
+  box-shadow: inset 0 0 28px -6px var(--status), 0 0 0 1px var(--status);
+}
+.panel-root[data-variant="a"].status-frame {
+  transition: border-color 0.2s;
+}
+.status-burst[data-compact="true"] {
+  background: color-mix(in oklch, var(--status) 20%, transparent);
+  animation: burst-compact 0.45s ease-out forwards;
+}
+.status-burst[data-compact="true"] .status-burst-text {
+  animation: none;
+  text-shadow: none;
+}
+@keyframes burst-compact {
+  0%, 35% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Vertical light switch */
@@ -392,4 +417,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span { animation: none; }
+  .status-burst[data-compact="true"] { animation: burst-compact 0.01s linear forwards; }
 }
