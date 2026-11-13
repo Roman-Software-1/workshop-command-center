@@ -353,8 +353,8 @@
   box-shadow: 0 0 18px var(--preset-work);
 }
 
-.vswitch-lg .vswitch-track { width: 84px; height: 230px; border-radius: 14px; }
-.vswitch-lg .vswitch-paddle { height: 104px; top: calc(100% - 108px); border-radius: 10px; }
+.vswitch-lg .vswitch-track { width: 120px; height: 300px; border-radius: 16px; }
+.vswitch-lg .vswitch-paddle { height: 136px; top: calc(100% - 140px); border-radius: 12px; }
 .vswitch-lg[data-on="true"] .vswitch-paddle { top: 4px; }
 
 /* Lit room glow behind lights card when on */

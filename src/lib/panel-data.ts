@@ -17,7 +17,7 @@ export const SAMPLE_TASKS: Task[] = [
   { id: "5", title: "Sharpen planer blades", list: "Shop", due: "Fri", priority: "normal", done: true },
 ];
 
-export const TODAY = { hoursWorkedMin: 312, tasksDone: 7, tasksTotal: 12, focusMin: 220 };
+export const TODAY = { hoursWorkedMin: 312, tasksDone: 7, tasksTotal: 12, focusMin: 220, breakMin: 35 };
 export const RIZE = { focusScore: 82, breaks: 3, topCategory: "Fabrication", topCategoryPct: 46 };
 
 export const STATUS_LABEL: Record<WorkStatus, string> = { in: "Clocked in", break: "On break", out: "Clocked out" };
