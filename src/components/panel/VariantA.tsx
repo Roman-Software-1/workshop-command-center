@@ -30,18 +30,18 @@ export function VariantA({ p }: { p: Panel }) {
           {/* Hero: clock + hours worked */}
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
             <div className="px-6 py-5">
-              <div className="font-mono text-6xl font-extrabold leading-none">{p.time}</div>
+              <Label>Hours worked</Label>
+              <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
+              <div className="mt-3 font-mono text-lg text-muted-foreground">
+                Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
+              </div>
+            </div>
+            <div className="px-6 py-5">
+              <div className="font-mono text-5xl font-extrabold leading-none">{p.time}</div>
               <div className="mt-2 text-sm text-muted-foreground">{p.date}</div>
               <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 <IndicatorLight className="h-2 w-2" />
                 {STATUS_LABEL[p.status]} · <span className="text-foreground">{p.timer}</span>
-              </div>
-            </div>
-            <div className="px-6 py-5">
-              <Label>Hours worked</Label>
-              <div className="font-mono text-5xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
-              <div className="mt-3 font-mono text-lg text-muted-foreground">
-                Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
               </div>
             </div>
           </div>
