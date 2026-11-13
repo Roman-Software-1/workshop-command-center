@@ -1,5 +1,5 @@
 import { VerticalSwitch } from "./VerticalSwitch";
-import { RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { MONTH, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight, LightBank } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
@@ -54,12 +54,15 @@ export function VariantA({ p }: { p: Panel }) {
             ))}
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col px-6 pt-4 pb-3">
+          <div className="grid min-h-0 flex-1 grid-cols-[1fr_250px] divide-x divide-border">
+          <div className="flex min-h-0 flex-col pl-6 pr-4 pt-4 pb-3">
             <div className="flex items-baseline justify-between">
               <Label>This week · hours</Label>
               <span className="font-mono text-xs text-muted-foreground">{WEEK.reduce((t, d) => t + (d.h ?? 0), 0).toFixed(1)}h / {WEEK_GOAL * WEEK.length}h goal</span>
             </div>
             <WeekChart />
+          </div>
+            <MonthHeatmap />
           </div>
 
           <div className="grid grid-cols-4 border-t border-border font-mono">
@@ -80,7 +83,7 @@ const Gauge = ({ k, v }: { k: string; v: string }) => (
 );
 
 function WeekChart() {
-  const W = 720, H = 200, pad = 28, max = 10;
+  const W = 480, H = 220, pad = 28, max = 10;
   const step = (W - pad * 2) / (WEEK.length - 1);
   const y = (h: number) => H - pad - (h / max) * (H - pad * 2);
   const pts = WEEK.flatMap((d, i) => (d.h == null ? [] : [[pad + i * step, y(d.h)] as const]));
@@ -111,5 +114,38 @@ function WeekChart() {
         </g>
       ))}
     </svg>
+  );
+}
+
+function MonthHeatmap() {
+  const first = new Date(MONTH.year, MONTH.month, 1).getDay(); // 0=Sun
+  const lead = (first + 6) % 7; // Monday-first
+  const cells: (number | null | undefined)[] = [...Array(lead).fill(undefined), ...MONTH.hours];
+  const level = (h: number | null | undefined) =>
+    h == null ? 0 : h === 0 ? 0.08 : h < 4 ? 0.3 : h < 7 ? 0.55 : h < 9 ? 0.8 : 1;
+  const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
+  return (
+    <div className="flex min-h-0 flex-col px-4 pt-4 pb-3">
+      <Label>{MONTH.label}</Label>
+      <div className="mb-2 font-mono text-xs text-muted-foreground">{total.toFixed(0)}h logged</div>
+      <div className="grid grid-cols-7 gap-1.5 font-mono text-[10px] text-muted-foreground">
+        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i} className="text-center">{d}</div>)}
+        {cells.map((h, i) => (
+          <div
+            key={i}
+            title={h != null ? `${h}h` : undefined}
+            className={`aspect-square rounded-[4px] ${h === undefined ? "" : "border border-border"}`}
+            style={h === undefined ? undefined : { background: h === null ? "transparent" : `color-mix(in oklch, var(--status-in) ${level(h) * 100}%, transparent)` }}
+          />
+        ))}
+      </div>
+      <div className="mt-auto flex items-center justify-end gap-1 pt-2 font-mono text-[10px] text-muted-foreground">
+        Less
+        {[0.08, 0.3, 0.55, 0.8, 1].map((l) => (
+          <span key={l} className="h-3 w-3 rounded-[3px]" style={{ background: `color-mix(in oklch, var(--status-in) ${l * 100}%, transparent)` }} />
+        ))}
+        More
+      </div>
+    </div>
   );
 }

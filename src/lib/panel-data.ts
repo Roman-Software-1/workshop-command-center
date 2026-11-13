@@ -32,3 +32,12 @@ export const WEEK: { day: string; h: number | null }[] = [
   { day: "Mon", h: 7.5 }, { day: "Tue", h: 8.6 }, { day: "Wed", h: 6.2 },
   { day: "Thu", h: 9.1 }, { day: "Fri", h: 5.2 }, { day: "Sat", h: null }, { day: "Sun", h: null },
 ];
+
+// Sample month of hours (null = future day).
+const MONTH_SAMPLE = [7.5, 0, 0, 8.2, 6.4, 9.1, 7.8, 3.5, 0, 7.5, 8.6, 6.2, 5.2];
+export const MONTH = {
+  label: "November 2026",
+  year: 2026,
+  month: 10,
+  hours: Array.from({ length: 30 }, (_, i) => MONTH_SAMPLE[i] ?? null) as (number | null)[],
+};
