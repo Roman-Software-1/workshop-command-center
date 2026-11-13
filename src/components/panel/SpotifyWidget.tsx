@@ -4,7 +4,7 @@ const SPOTIFY_EMBED_URL =
 
 export function SpotifyWidget() {
   return (
-    <section aria-label="Spotify player" className="mx-auto h-20 w-full max-w-[560px] overflow-hidden rounded-xl">
+    <section aria-label="Spotify player" className="h-20 w-full overflow-hidden rounded-xl">
       <iframe
         title="Spotify player"
         src={SPOTIFY_EMBED_URL}

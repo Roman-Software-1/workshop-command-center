@@ -71,9 +71,9 @@ export function VariantA({ p }: { p: Panel }) {
             <Gauge k="Focus score" v={`${RIZE.focusScore}`} />
             <Gauge k={RIZE.topCategory} v={`${RIZE.topCategoryPct}%`} />
           </div>
+          <div className="border-t border-border px-4 py-3"><SpotifyWidget /></div>
         </section>
       </div>
-      <div className="flex items-center justify-center border-t border-border bg-card/40 px-5 py-3"><SpotifyWidget /></div>
     </div>
   );
 }
