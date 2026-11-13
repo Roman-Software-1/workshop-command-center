@@ -4,9 +4,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Workshop Panel — Pick a design" },
-      { name: "description", content: "Three design options for the 1024x600 workshop touchscreen." },
+      { name: "description", content: "Workshop touchscreen designs, with Instrument Panel A fitted to 1024x768." },
       { property: "og:title", content: "Workshop Panel — Pick a design" },
-      { property: "og:description", content: "Three design options for the 1024x600 workshop touchscreen." },
+      { property: "og:description", content: "Workshop touchscreen designs, with Instrument Panel A fitted to 1024x768." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

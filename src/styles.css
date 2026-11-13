@@ -189,6 +189,9 @@
 .panel-root[data-status="in"] { --status: var(--status-in); }
 .panel-root[data-status="break"] { --status: var(--status-break); }
 .panel-root[data-status="out"] { --status: var(--status-out); }
+.panel-root[data-variant="a"] {
+  height: 768px;
+}
 .panel-root[data-variant="c"] {
   --background: oklch(0.2 0.006 260);
   --card: oklch(0.24 0.008 260);
@@ -207,7 +210,7 @@
   background: oklch(0.08 0 0);
 }
 
-/* Kiosk stage: the 1024x600 panel fits the physical screen exactly. */
+/* Kiosk stage: design A fits the physical 1024x768 screen without scaling. */
 .panel-stage {
   position: fixed;
   inset: 0;
@@ -223,7 +226,7 @@
 .panel-stage::-webkit-scrollbar {
   display: none;
 }
-@media (min-width: 1056px) and (min-height: 632px) {
+@media (min-width: 1056px) and (min-height: 800px) {
   .panel-stage {
     padding: 16px;
   }
