@@ -7,7 +7,8 @@ import { SpotifyWidget } from "./SpotifyWidget";
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p }: { p: Panel }) {
   return (
-    <div className="grid h-full grid-cols-[440px_1fr] divide-x divide-border">
+    <div className="flex h-full flex-col">
+    <div className="grid min-h-0 flex-1 grid-cols-[440px_1fr] divide-x divide-border">
       <section className="flex flex-col gap-6 p-5">
         <div data-on={p.lights} className="lights-card flex h-44 shrink-0 items-center justify-between rounded-md border-2 border-border px-6 transition-colors">
           <div className="text-left">
@@ -32,7 +33,6 @@ export function VariantA({ p }: { p: Panel }) {
             <Row k="Tasks done" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
             <Row k="Focus time" v={fmtMin(TODAY.focusMin)} />
           </div>
-          <SpotifyWidget />
         </div>
       </section>
       <section className="flex flex-col">
@@ -72,6 +72,8 @@ export function VariantA({ p }: { p: Panel }) {
           <Gauge k={RIZE.topCategory} v={`${RIZE.topCategoryPct}%`} />
         </div>
       </section>
+    </div>
+    <div className="border-t border-border px-5 py-3"><SpotifyWidget /></div>
     </div>
   );
 }
