@@ -8,6 +8,7 @@ export function StatusBurst({ status, frosted = false }: { status: WorkStatus; f
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
+    if (frosted && status === "break") return; // A shows the break overlay instead
     setN((x) => x + 1);
     setVisible(true);
     const timeout = setTimeout(() => setVisible(false), 1800);

@@ -6,6 +6,8 @@ import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
 import { AccountButton } from "@/components/account/AccountButton";
+import { BreakOverlay, BreakPicker } from "./BreakOverlay";
+import { BREAK_LABEL } from "@/lib/break";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
@@ -40,14 +42,14 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
               <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">{p.date}<AccountButton /></div>
               <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 <IndicatorLight className="h-2 w-2" />
-                {STATUS_LABEL[p.status]} · <span className="text-foreground">{p.timer}</span>
+                {STATUS_LABEL[p.status]}{p.status === "break" && p.breakInfo ? ` · ${BREAK_LABEL[p.breakInfo.kind]}` : ""} · <span className="text-foreground">{p.timer}</span>
               </div>
             </div>
           </div>
 
           <div className="grid shrink-0 grid-cols-3 gap-3 border-b border-border px-3 py-2">
             {(["in", "break", "out"] as const).map((s) => (
-              <button key={s} onClick={() => p.setStatus(s)} style={{ "--c": `var(--status-${s})` } as React.CSSProperties} className={`h-11 rounded-md border-2 font-mono text-base uppercase transition-all active:scale-95 ${p.status === s ? "border-[var(--c)] bg-[var(--c)] text-primary-foreground shadow-[0_0_20px_-2px_var(--c)]" : "border-[var(--c)]/40 text-[var(--c)]"}`}>
+              <button key={s} onClick={() => (s === "break" ? p.openBreakPicker() : p.setStatus(s))} style={{ "--c": `var(--status-${s})` } as React.CSSProperties} className={`h-11 rounded-md border-2 font-mono text-base uppercase transition-all active:scale-95 ${p.status === s ? "border-[var(--c)] bg-[var(--c)] text-primary-foreground shadow-[0_0_20px_-2px_var(--c)]" : "border-[var(--c)]/40 text-[var(--c)]"}`}>
                 {s === "in" ? "Clock in" : s === "break" ? "Break" : "Clock out"}
               </button>
             ))}
@@ -75,6 +77,10 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
       </div>
     </div>
     <div className="flex w-[84px] shrink-0 border-l border-border px-2 py-3"><DaylightBar /></div>
+    {p.picking && <BreakPicker onPick={p.startBreak} onCancel={p.cancelBreakPicker} />}
+    {p.status === "break" && p.breakInfo && !p.picking && (
+      <BreakOverlay kind={p.breakInfo.kind} startedAt={p.breakInfo.startedAt} now={Math.max(p.nowMs, p.breakInfo.startedAt)} onResume={() => p.setStatus("in")} onClockOut={() => p.setStatus("out")} />
+    )}
     </div>
   );
 }

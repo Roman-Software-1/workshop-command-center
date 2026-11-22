@@ -18,7 +18,7 @@ describe("Temporary status feedback", () => {
   it("clears even when animation events are unavailable", () => {
     vi.useFakeTimers();
     const { container, rerender } = render(<StatusBurst status="out" frosted />);
-    rerender(<StatusBurst status="break" frosted />);
+    rerender(<StatusBurst status="in" frosted />);
     expect(container.childElementCount).toBe(1);
     act(() => vi.advanceTimersByTime(1800));
     expect(container.childElementCount).toBe(0);
