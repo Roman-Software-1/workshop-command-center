@@ -13,5 +13,6 @@
 
 # Data connections
 
+- [x] Keep Rize minute checks active when the screen is marked hidden, and check immediately on focus/reconnect.
 - [x] Connect the owner's Rize account securely and verify account access.
 - [x] Replace design A sample totals and charts with public Rize aggregates, keeping detailed activity private; verified live reads, status controls, and the 1024x600 fit.

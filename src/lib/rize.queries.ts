@@ -6,6 +6,9 @@ export const rizeTotalsQuery = queryOptions({
   queryFn: () => getRizeTotals(),
   staleTime: 60_000,
   refetchInterval: 60_000,
-  refetchIntervalInBackground: false,
+  // Kiosk/embedded previews can be marked hidden even while the screen is in use.
+  refetchIntervalInBackground: true,
+  refetchOnWindowFocus: "always",
+  refetchOnReconnect: "always",
   retry: false,
 });
