@@ -1,8 +1,7 @@
-// @vitest-environment node
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync(new URL("../../drizzle/migrations/0000_create_private_profiles.sql", import.meta.url), "utf8");
+const migration = readFileSync(`${process.cwd()}/drizzle/migrations/0000_create_private_profiles.sql`, "utf8");
 
 describe("private profile access", () => {
   it("limits profile reads to the signed-in owner", () => {
