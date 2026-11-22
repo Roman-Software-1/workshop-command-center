@@ -1,7 +1,7 @@
 # Spotify
 
 - [ ] Connect and protect owner-only Spotify playback controls. Paused by user: build sign-in first, leaving Spotify unconnected.
-- [ ] Add Google/Lovable sign-in and private saved profiles; verify saving, reloading, and sign-out.
+- [x] Add Google/Lovable sign-in and private saved profiles; verified saving, reloading, and sign-out with a temporary signed-in user, plus 1024x600 dashboard fit and mobile sign-in.
 
 - [x] Official Spotify embed on screen A (sample playlist until user sends theirs).
 - [x] Rolling last 7 days chart
