@@ -1,37 +1,19 @@
-import { VerticalSwitch } from "./VerticalSwitch";
 import { MONTH, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
-import { IndicatorLight, LightBank } from "./IndicatorLights";
+import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p }: { p: Panel }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr] divide-x divide-border">
-        {/* Lights: one big, easy-to-hit switch */}
-        <section className="p-4">
-          <button
-            type="button"
-            onClick={() => p.setLights(!p.lights)}
-            data-on={p.lights}
-            className="lights-card flex h-full w-full flex-col items-center justify-between rounded-lg border-2 border-border py-6 transition-colors"
-          >
-            <div className="text-center">
-              <div className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Lights</div>
-              <div className="font-mono text-5xl font-extrabold" style={{ color: p.lights ? "var(--preset-work)" : undefined }}>{p.lights ? "ON" : "OFF"}</div>
-            </div>
-            <div className="pointer-events-none"><VerticalSwitch on={p.lights} onToggle={() => {}} large /></div>
-            <LightBank className={p.lights ? "opacity-100" : "opacity-30"} />
-          </button>
-        </section>
-
-        <section className="flex min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <section className="flex min-h-0 flex-1 flex-col">
           {/* Hero: clock + hours worked */}
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
             <div className="px-6 py-3">
               <Label>Hours worked</Label>
-              <div className="font-mono text-5xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
+              <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
               <div className="mt-2 font-mono text-base text-muted-foreground">
                 Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
               </div>
@@ -54,7 +36,7 @@ export function VariantA({ p }: { p: Panel }) {
             ))}
           </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-[1fr_250px] divide-x divide-border">
+          <div className="grid min-h-0 flex-1 grid-cols-[1fr_300px] divide-x divide-border">
           <div className="flex min-h-0 flex-col pl-6 pr-4 pt-4 pb-3">
             <div className="flex items-baseline justify-between">
               <Label>This week · hours</Label>
@@ -126,9 +108,9 @@ function MonthHeatmap() {
   const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
     <div className="flex min-h-0 flex-col px-4 pt-3 pb-2">
-      <Label>{MONTH.label}</Label>
-      <div className="mb-2 font-mono text-xs text-muted-foreground">{total.toFixed(0)}h logged</div>
-      <div className="grid w-[148px] shrink-0 self-center grid-cols-7 gap-1 font-mono text-[10px] text-muted-foreground">
+      <Label>{MONTH.label} · {total.toFixed(0)}h</Label>
+      
+      <div className="grid w-[140px] shrink-0 self-center grid-cols-7 gap-1 font-mono text-[10px] text-muted-foreground">
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i} className="text-center">{d}</div>)}
         {cells.map((h, i) => (
           <div
