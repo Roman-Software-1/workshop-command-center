@@ -5,6 +5,7 @@ import { publicRizeMetrics, workshopDate, type RizeMetrics, type RizeResult } fr
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
+import { AccountButton } from "@/components/account/AccountButton";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
@@ -36,7 +37,7 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
             </div>
             <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
               <div className="font-mono text-4xl font-extrabold leading-none">{p.time}</div>
-              <div className="mt-2 text-sm text-muted-foreground">{p.date}</div>
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">{p.date}<AccountButton /></div>
               <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
                 <IndicatorLight className="h-2 w-2" />
                 {STATUS_LABEL[p.status]} · <span className="text-foreground">{p.timer}</span>

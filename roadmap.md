@@ -1,6 +1,7 @@
 # Spotify
 
-- [ ] Fix Spotify to show and control playback on the owner's phone or computer; use only the owner's Spotify account, protect controls with sign-in, and save profile details. Blocked: Spotify connection card was declined; awaiting the user's preferred next step.
+- [ ] Connect and protect owner-only Spotify playback controls. Paused by user: build sign-in first, leaving Spotify unconnected.
+- [ ] Add Google/Lovable sign-in and private saved profiles; verify saving, reloading, and sign-out.
 
 - [x] Official Spotify embed on screen A (sample playlist until user sends theirs).
 - [x] Rolling last 7 days chart

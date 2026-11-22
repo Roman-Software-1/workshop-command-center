@@ -33,3 +33,4 @@ use the editor.
 - Frost status feedback only in design A, using standard backdrop-filter; unmount feedback after its finite animation with a timeout fallback so the dashboard never stays blurred.
 - Rize totals use a no-input public server function, a server-only fixed summary query, explicit aggregate projection, and a 60-second cache; this prevents provider credentials and detailed activity from reaching public clients.
 - Design A reads Rize via a route loader and TanStack Query with minute refreshes; legacy designs keep samples, and connected read failures must never fall back to fabricated totals.
+- Account state has one root AuthProvider subscriber; the public /auth page reads and updates only the signed-in user's profile through RLS, keeping the kiosk and Rize totals public.
