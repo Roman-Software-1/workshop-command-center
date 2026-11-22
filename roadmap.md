@@ -1,6 +1,6 @@
 # Spotify
 
-- [ ] Fix Spotify with a sign-in flow; waiting for the choice between playback on the workshop screen and controlling another device.
+- [ ] Fix Spotify to show and control playback on the owner's phone or computer, with sign-in; checking supported account connection and waiting for profile requirements.
 
 - [x] Official Spotify embed on screen A (sample playlist until user sends theirs).
 - [x] Rolling last 7 days chart
