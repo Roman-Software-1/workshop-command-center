@@ -11,4 +11,4 @@
 # Data connections
 
 - [x] Connect the owner's Rize account securely and verify account access.
-- [ ] Replace dashboard sample numbers with available Rize metrics; waiting for the owner to choose who may view real numbers.
+- [x] Replace design A sample totals and charts with public Rize aggregates, keeping detailed activity private; verified live reads, status controls, and the 1024x600 fit.

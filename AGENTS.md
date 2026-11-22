@@ -31,3 +31,5 @@ use the editor.
 
 - Keep design A at the physical screen's native dimensions, using layout spacing rather than transforms or stretched content; B and C remain legacy design previews.
 - Frost status feedback only in design A, using standard backdrop-filter; unmount feedback after its finite animation with a timeout fallback so the dashboard never stays blurred.
+- Rize totals use a no-input public server function, a server-only fixed summary query, explicit aggregate projection, and a 60-second cache; this prevents provider credentials and detailed activity from reaching public clients.
+- Design A reads Rize via a route loader and TanStack Query with minute refreshes; legacy designs keep samples, and connected read failures must never fall back to fabricated totals.

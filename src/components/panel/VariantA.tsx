@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { daylightFor, minutesInZone, type DayLight } from "@/lib/sun";
-import { heatColor, LOCATION, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { heatColor, LOCATION, MONTH_TARGET_H, WEEK_TARGET_H, WEEK_GOAL, STATUS_LABEL, fmtMin } from "@/lib/panel-data";
+import { publicRizeMetrics, workshopDate, type RizeMetrics, type RizeResult } from "@/lib/rize-summary";
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
-export function VariantA({ p }: { p: Panel }) {
+export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
+  // No sample numbers on the connected display, including during outages.
+  const empty = publicRizeMetrics([], workshopDate(new Date()));
+  const metrics = rize.metrics;
+  const week = metrics?.week ?? empty.week.map((d) => ({ ...d, h: null }));
+  const month = metrics?.month ?? { ...empty.month, hours: empty.month.hours.map(() => null) };
+  const minutes = (value: number | undefined) => value === undefined ? "—" : fmtMin(value);
   return (
     <div className="flex h-full">
     <div className="flex h-full min-w-0 flex-1 flex-col">
@@ -16,15 +23,15 @@ export function VariantA({ p }: { p: Panel }) {
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
             <div className="flex items-center gap-4 px-5 py-2.5">
               <div className="flex flex-1 flex-col items-center text-center">
-                <Label>Hours worked</Label>
-                <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
+                <Label>Hours worked · <span title={rize.updatedAt ? `Updated ${rize.updatedAt}` : undefined}>{rize.error ? "Rize offline" : "Rize"}</span></Label>
+                <div className="font-mono text-6xl font-extrabold leading-none">{minutes(metrics?.today.hoursWorkedMin)}</div>
                 <div className="mt-2 font-mono text-base text-muted-foreground">
-                  Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
+                  Break <span className="text-[var(--status-break)]">{minutes(metrics?.today.breakMin)}</span>
                 </div>
               </div>
               <div className="flex w-[150px] shrink-0 flex-col gap-2">
-                <ProgressTile label="Week" value={weekToDateHours()} goal={WEEK_TARGET_H} />
-                <ProgressTile label="Month" value={monthToDateHours()} goal={MONTH_TARGET_H} />
+                <ProgressTile label="Week" value={metrics?.weekHours} goal={WEEK_TARGET_H} />
+                <ProgressTile label="Month" value={metrics?.monthHours} goal={MONTH_TARGET_H} />
               </div>
             </div>
             <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
@@ -49,18 +56,18 @@ export function VariantA({ p }: { p: Panel }) {
           <div className="flex min-h-0 flex-col px-6 pt-3 pb-2">
             <div className="flex items-baseline justify-between">
               <Label>Last 7 days · hours</Label>
-              <span className="font-mono text-xs text-muted-foreground">{WEEK.reduce((t, d) => t + (d.h ?? 0), 0).toFixed(1)}h / {WEEK_GOAL * WEEK.length}h goal</span>
+              <span className="font-mono text-xs text-muted-foreground">{metrics ? `${week.reduce((t, d) => t + (d.h ?? 0), 0).toFixed(1)}h` : "—"} / {WEEK_GOAL * week.length}h goal</span>
             </div>
-            <WeekChart />
+            <WeekChart week={week} />
           </div>
-            <MonthHeatmap />
+            <MonthHeatmap month={month} available={metrics !== null} />
           </div>
 
           <div className="grid shrink-0 grid-cols-4 border-b border-border font-mono">
-            <Gauge k="Tasks" v={`${TODAY.tasksDone}/${TODAY.tasksTotal}`} />
-            <Gauge k="Focus time" v={fmtMin(TODAY.focusMin)} />
-            <Gauge k="Focus score" v={`${RIZE.focusScore}`} />
-            <Gauge k={RIZE.topCategory} v={`${RIZE.topCategoryPct}%`} />
+            <Gauge k="Tasks" v="—" />
+            <Gauge k="Focus time" v={minutes(metrics?.today.focusMin)} />
+            <Gauge k="Focus score" v="—" />
+            <Gauge k="Meeting time" v={minutes(metrics?.today.meetingMin)} />
           </div>
           <div className="shrink-0 px-4 py-2"><SpotifyWidget /></div>
         </section>
@@ -71,15 +78,15 @@ export function VariantA({ p }: { p: Panel }) {
   );
 }
 const Label = ({ children }: { children: React.ReactNode }) => <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">{children}</div>;
-function ProgressTile({ label, value, goal }: { label: string; value: number; goal: number }) {
-  const pct = Math.min(100, (value / goal) * 100);
-  const done = value >= goal;
+function ProgressTile({ label, value, goal }: { label: string; value: number | undefined; goal: number }) {
+  const pct = Math.min(100, ((value ?? 0) / goal) * 100);
+  const done = value !== undefined && value >= goal;
   return (
     <div className="relative overflow-hidden rounded-md border border-border bg-[var(--tile-raised)] py-1.5 pl-3 pr-2.5 font-mono">
       <span className="absolute inset-y-0 left-0 w-[3px] bg-[var(--status-in)] shadow-[0_0_8px_var(--status-in)]" />
       <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--status-in)]">{label}</div>
       <div className="flex items-baseline justify-between">
-        <span className="text-lg font-extrabold leading-tight">{value.toFixed(1)}h</span>
+        <span className="text-lg font-extrabold leading-tight">{value === undefined ? "—" : `${value.toFixed(1)}h`}</span>
         <span className="text-[10px] text-muted-foreground">of {goal}h</span>
       </div>
       <div className="mt-1 h-1 rounded-full bg-muted">
@@ -92,11 +99,11 @@ const Gauge = ({ k, v }: { k: string; v: string }) => (
   <div className="border-r border-border px-5 py-1.5 last:border-r-0"><div className="truncate text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div><div className="text-2xl font-extrabold">{v}</div></div>
 );
 
-function WeekChart() {
-  const W = 620, H = 200, pad = 26, max = 10;
-  const step = (W - pad * 2) / (WEEK.length - 1);
+function WeekChart({ week }: { week: RizeMetrics["week"] }) {
+  const W = 620, H = 200, pad = 26, max = Math.max(10, ...week.map((d) => d.h ?? 0));
+  const step = (W - pad * 2) / (week.length - 1);
   const y = (h: number) => H - pad - (h / max) * (H - pad * 2);
-  const pts = WEEK.flatMap((d, i) => (d.h == null ? [] : [[pad + i * step, y(d.h)] as const]));
+  const pts = week.flatMap((d, i) => (d.h == null ? [] : [[pad + i * step, y(d.h)] as const]));
   const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x},${yy}`).join(" ");
   const last = pts[pts.length - 1];
   const area = last ? `${line} L${last[0]},${H - pad} L${pad},${H - pad} Z` : "";
@@ -108,16 +115,16 @@ function WeekChart() {
           <stop offset="100%" stopColor="var(--status-in)" stopOpacity="0" />
         </linearGradient>
       </defs>
-      {[0, 4, 8].map((g) => (
+      {[0, max / 2, max].map((g) => (
         <g key={g}>
           <line x1={pad} x2={W - pad} y1={y(g)} y2={y(g)} stroke="var(--border)" />
-          <text x={4} y={y(g) + 4} fontSize="11" fill="var(--muted-foreground)" fontFamily="monospace">{g}</text>
+          <text x={4} y={y(g) + 4} fontSize="11" fill="var(--muted-foreground)" fontFamily="monospace">{g.toFixed(0)}</text>
         </g>
       ))}
       <line x1={pad} x2={W - pad} y1={y(WEEK_GOAL)} y2={y(WEEK_GOAL)} stroke="var(--status-break)" strokeDasharray="6 6" />
       <path d={area} fill="url(#wk)" />
       <path d={line} fill="none" stroke="var(--status-in)" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      {WEEK.map((d, i) => (
+      {week.map((d, i) => (
         <g key={d.day}>
           {d.h != null && <circle cx={pad + i * step} cy={y(d.h)} r={i === pts.length - 1 ? 6 : 4} fill={i === pts.length - 1 ? "var(--status-in)" : "var(--background)"} stroke="var(--status-in)" strokeWidth="2" />}
           <text x={pad + i * step} y={H - 6} textAnchor="middle" fontSize="12" fill={d.h == null ? "var(--muted-foreground)" : "var(--foreground)"} fontFamily="monospace">{d.day}</text>
@@ -127,22 +134,22 @@ function WeekChart() {
   );
 }
 
-function MonthHeatmap() {
-  const first = new Date(MONTH.year, MONTH.month, 1).getDay(); // 0=Sun
+function MonthHeatmap({ month, available }: { month: RizeMetrics["month"]; available: boolean }) {
+  const first = new Date(Date.UTC(month.year, month.month, 1)).getUTCDay(); // 0=Sun
   const lead = (first + 6) % 7; // Monday-first
-  const cells: (number | null | undefined)[] = [...Array(lead).fill(undefined), ...MONTH.hours];
-  const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
+  const cells: (number | null | undefined)[] = [...Array(lead).fill(undefined), ...month.hours];
+  const total = month.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
     <div className="flex min-h-0 gap-3 px-5 pt-3 pb-2">
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-baseline justify-between"><Label>{MONTH.label}</Label><span className="font-mono text-xs text-muted-foreground">{total.toFixed(0)}h</span></div>
+      <div className="flex items-baseline justify-between"><Label>{month.label}</Label><span className="font-mono text-xs text-muted-foreground">{available ? `${total.toFixed(0)}h` : "—"}</span></div>
       <div className="relative min-h-0 flex-1">
       <div className="absolute inset-y-0 left-1/2 grid h-full -translate-x-1/2 grid-cols-7 grid-rows-7 gap-1 [aspect-ratio:1.15] font-mono text-[10px] text-muted-foreground">
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <div key={i} className="flex items-end justify-center leading-none">{d}</div>)}
         {cells.map((h, i) => (
           <div
             key={i}
-            title={h != null ? `${h}h` : undefined}
+            title={h != null ? `${month.label} ${i - lead + 1}: ${h.toFixed(1)}h` : undefined}
             className={`rounded-[4px] ${h === undefined ? "" : "border border-border"}`}
             style={h === undefined ? undefined : { background: h === null ? "transparent" : heatColor(h) }}
           />
