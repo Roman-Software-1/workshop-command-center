@@ -11,14 +11,14 @@ export function VariantA({ p }: { p: Panel }) {
         <section className="flex min-h-0 flex-1 flex-col">
           {/* Hero: clock + hours worked */}
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
-            <div className="px-6 py-2.5">
+            <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
               <Label>Hours worked</Label>
               <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
               <div className="mt-2 font-mono text-base text-muted-foreground">
                 Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
               </div>
             </div>
-            <div className="px-6 py-2.5">
+            <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
               <div className="font-mono text-4xl font-extrabold leading-none">{p.time}</div>
               <div className="mt-2 text-sm text-muted-foreground">{p.date}</div>
               <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
@@ -39,7 +39,7 @@ export function VariantA({ p }: { p: Panel }) {
           <div className="grid min-h-0 flex-1 grid-cols-[1fr_360px] divide-x divide-border border-b border-border">
           <div className="flex min-h-0 flex-col px-6 pt-3 pb-2">
             <div className="flex items-baseline justify-between">
-              <Label>This week · hours</Label>
+              <Label>Last 7 days · hours</Label>
               <span className="font-mono text-xs text-muted-foreground">{WEEK.reduce((t, d) => t + (d.h ?? 0), 0).toFixed(1)}h / {WEEK_GOAL * WEEK.length}h goal</span>
             </div>
             <WeekChart />

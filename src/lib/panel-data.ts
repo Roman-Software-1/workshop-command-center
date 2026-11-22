@@ -28,10 +28,17 @@ export function fmtMin(m: number) {
 
 // Sample weekly hours (null = day not reached yet).
 export const WEEK_GOAL = 8;
-export const WEEK: { day: string; h: number | null }[] = [
-  { day: "Mon", h: 7.5 }, { day: "Tue", h: 8.6 }, { day: "Wed", h: 6.2 },
-  { day: "Thu", h: 9.1 }, { day: "Fri", h: 5.2 }, { day: "Sat", h: null }, { day: "Sun", h: null },
-];
+// Rolling last 7 days (sample hours), oldest first; the last entry is today.
+const LAST7_SAMPLE = [8.6, 6.2, 9.1, 5.2, 0, 3.5, 5.2];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export function lastSevenDays(today = new Date()): { day: string; h: number | null }[] {
+  return LAST7_SAMPLE.map((h, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return { day: i === 6 ? "Today" : DAY_NAMES[d.getDay()] ?? "", h };
+  });
+}
+export const WEEK = lastSevenDays();
 
 // Sample month of hours (null = future day).
 const MONTH_SAMPLE = [7.5, 0, 0, 8.2, 6.4, 9.1, 7.8, 3.5, 0, 7.5, 8.6, 6.2, 5.2];
