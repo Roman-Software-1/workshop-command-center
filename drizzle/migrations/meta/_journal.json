@@ -8,6 +8,13 @@
       "when": 1795332983228,
       "tag": "0000_create_private_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795333681740,
+      "tag": "0001_spotify_tokens",
+      "breakpoints": true
     }
   ]
 }

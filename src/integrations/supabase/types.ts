@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      spotify_tokens: {
+        Row: {
+          access_token: string | null
+          expires_at: string | null
+          id: number
+          owner_id: string
+          refresh_token: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          expires_at?: string | null
+          id?: number
+          owner_id: string
+          refresh_token: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          expires_at?: string | null
+          id?: number
+          owner_id?: string
+          refresh_token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
