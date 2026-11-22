@@ -20,6 +20,15 @@ export function shiftDate(date: string, days: number): string {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+// UTC instant of local midnight in the workshop time zone (handles DST).
+export function workshopMidnightUtc(date: string): string {
+  for (const off of [4, 5, 6, 3]) {
+    const t = new Date(`${date}T${String(off).padStart(2, "0")}:00:00Z`);
+    const h = new Intl.DateTimeFormat("en-US", { timeZone: LOCATION.timeZone, hour: "2-digit", hourCycle: "h23" }).format(t);
+    if (workshopDate(t) === date && Number(h) === 0) return t.toISOString();
+  }
+  return new Date(`${date}T05:00:00Z`).toISOString();
+}
 export function rizeDateRange(now: Date) {
   const today = workshopDate(now);
   const monthStart = `${today.slice(0, 7)}-01`;
@@ -28,10 +37,12 @@ export function rizeDateRange(now: Date) {
 }
 
 // Only explicit aggregate fields cross the public boundary; never spread provider objects.
-export function publicRizeMetrics(buckets: RizeBucket[], today: string): RizeMetrics {
+// `tracked` = seconds per local date from Rize's Tracked page (time entries); it drives hours when given.
+export function publicRizeMetrics(buckets: RizeBucket[], today: string, tracked?: Map<string, number>): RizeMetrics {
   const byDate = new Map(buckets.map((b) => [b.date.slice(0, 10), b]));
   const seconds = (n: number | undefined) => typeof n === "number" && Number.isFinite(n) ? Math.max(0, n) : 0;
-  const hours = (date: string) => seconds(byDate.get(date)?.workHours) / 3600;
+  const workSeconds = (date: string) => seconds(tracked ? tracked.get(date) : byDate.get(date)?.workHours);
+  const hours = (date: string) => workSeconds(date) / 3600;
   const current = byDate.get(today);
   const d = new Date(`${today}T12:00:00Z`);
   const year = d.getUTCFullYear(), month = d.getUTCMonth();
@@ -45,7 +56,7 @@ export function publicRizeMetrics(buckets: RizeBucket[], today: string): RizeMet
     return date > today ? null : hours(date);
   });
   return {
-    today: { hoursWorkedMin: Math.floor(seconds(current?.workHours) / 60), focusMin: Math.floor(seconds(current?.focusTime) / 60), breakMin: Math.floor(seconds(current?.breakTime) / 60), meetingMin: Math.floor(seconds(current?.meetingTime) / 60) },
+    today: { hoursWorkedMin: Math.floor(workSeconds(today) / 60), focusMin: Math.floor(seconds(current?.focusTime) / 60), breakMin: Math.floor(seconds(current?.breakTime) / 60), meetingMin: Math.floor(seconds(current?.meetingTime) / 60) },
     week,
     month: { label: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(d), year, month, hours: monthHours },
     weekHours: week.slice(6 - sinceMonday).reduce((sum, b) => sum + (b.h ?? 0), 0),

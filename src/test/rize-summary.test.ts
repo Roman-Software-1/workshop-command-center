@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { publicRizeMetrics, rizeDateRange, workshopDate } from "@/lib/rize-summary";
+import { publicRizeMetrics, rizeDateRange, workshopDate, workshopMidnightUtc } from "@/lib/rize-summary";
 
 const bucket = { date: "2026-11-22 04:00:00 -0500", workHours: 18720, focusTime: 13200, breakTime: 2100, meetingTime: 600 };
 describe("Public Rize totals", () => {
@@ -28,5 +28,14 @@ describe("Public Rize totals", () => {
     expect(result.month.hours[21]).toBe(5.2);
     expect(result.month.hours[22]).toBeNull();
     expect(result.month.hours[0]).toBe(0);
+  });
+  it("uses Rize Tracked time for hours worked when available", () => {
+    const r = publicRizeMetrics([bucket], "2026-11-22", new Map([["2026-11-22", 15180]]));
+    expect(r.today.hoursWorkedMin).toBe(253);
+    expect(r.today.breakMin).toBe(35);
+  });
+  it("starts the tracked day at Detroit midnight across daylight saving", () => {
+    expect(workshopMidnightUtc("2026-11-22")).toBe("2026-11-22T05:00:00.000Z");
+    expect(workshopMidnightUtc("2026-07-01")).toBe("2026-07-01T04:00:00.000Z");
   });
 });
