@@ -1,4 +1,5 @@
-import { MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { useEffect, useState } from "react";
+import { DAYLIGHT, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
@@ -130,7 +131,8 @@ function MonthHeatmap() {
     h == null ? 0 : h === 0 ? 0.08 : h < 4 ? 0.3 : h < 7 ? 0.55 : h < 9 ? 0.8 : 1;
   const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
-    <div className="flex min-h-0 flex-col px-5 pt-3 pb-2">
+    <div className="flex min-h-0 gap-3 pl-5 pr-3 pt-3 pb-2">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-baseline justify-between"><Label>{MONTH.label}</Label><span className="font-mono text-xs text-muted-foreground">{total.toFixed(0)}h</span></div>
       <div className="relative min-h-0 flex-1">
       <div className="absolute inset-y-0 left-1/2 grid h-full -translate-x-1/2 grid-cols-7 grid-rows-7 gap-1 [aspect-ratio:1.15] font-mono text-[10px] text-muted-foreground">
@@ -152,6 +154,39 @@ function MonthHeatmap() {
         ))}
         More
       </div>
+    </div>
+    <DaylightBar />
+    </div>
+  );
+}
+
+const toMin = (t: string) => { const [h = 0, m = 0] = t.split(":").map(Number); return h * 60 + m; };
+function DaylightBar() {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => { const d = new Date(); setNow(d.getHours() * 60 + d.getMinutes()); };
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const D = 1440, rise = toMin(DAYLIGHT.sunrise), set = toMin(DAYLIGHT.sunset), tw = DAYLIGHT.twilightMin;
+  const pc = (m: number) => `${(m / D) * 100}%`;
+  const bg = `linear-gradient(to bottom, var(--sky-night) 0 ${pc(rise - tw)}, var(--sky-twilight) ${pc(rise - tw)} ${pc(rise)}, var(--sky-day) ${pc(rise)} ${pc(set)}, var(--sky-twilight) ${pc(set)} ${pc(set + tw)}, var(--sky-night) ${pc(set + tw)} 100%)`;
+  const len = set - rise;
+  return (
+    <div className="flex w-[58px] shrink-0 flex-col items-center font-mono">
+      <div className="text-xs font-extrabold leading-none">{Math.floor(len / 60)}h {len % 60}m</div>
+      <div className="mb-1 text-[8px] uppercase tracking-[0.2em] text-[var(--sky-day)]">Daylight</div>
+      <div className="text-[10px] leading-none text-[var(--sky-day)]">☀</div>
+      <div className="relative my-1 flex min-h-0 w-full flex-1">
+        <div className="relative w-[18px] flex-1 overflow-hidden rounded-md border border-border" style={{ background: bg, maxWidth: 18 }}>
+          {now != null && <div className="absolute inset-x-0 h-[2px] -translate-y-1/2 bg-foreground shadow-[0_0_6px_var(--foreground)]" style={{ top: pc(now) }} />}
+        </div>
+        <div className="relative ml-1 flex-1 text-[9px] text-muted-foreground">
+          {[4, 8, 12, 16, 20].map((h) => <span key={h} className="absolute -translate-y-1/2 leading-none" style={{ top: pc(h * 60) }}>{String(h).padStart(2, "0")}</span>)}
+        </div>
+      </div>
+      <div className="text-[10px] leading-none text-[var(--sky-twilight)]">☾</div>
     </div>
   );
 }

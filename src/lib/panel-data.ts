@@ -57,3 +57,6 @@ export function weekToDateHours(today = new Date()): number {
   const sinceMon = (today.getDay() + 6) % 7; // 0 = Monday
   return WEEK.slice(6 - sinceMon).reduce((t, d) => t + (d.h ?? 0), 0);
 }
+
+// Sample daylight for late November (replace with real location data later).
+export const DAYLIGHT = { sunrise: "06:50", sunset: "16:40", twilightMin: 30 };
