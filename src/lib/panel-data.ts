@@ -58,5 +58,5 @@ export function weekToDateHours(today = new Date()): number {
   return WEEK.slice(6 - sinceMon).reduce((t, d) => t + (d.h ?? 0), 0);
 }
 
-// Sample daylight for late November (replace with real location data later).
-export const DAYLIGHT = { sunrise: "06:50", sunset: "16:40", twilightMin: 30 };
+// Workshop location for the daylight bar (edit to change city / time zone).
+export const LOCATION = { name: "Oakland County, MI", lat: 42.66, lon: -83.39, timeZone: "America/Detroit" };

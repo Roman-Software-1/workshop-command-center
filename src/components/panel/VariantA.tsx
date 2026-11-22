@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { DAYLIGHT, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { daylightFor, minutesInZone, type DayLight } from "@/lib/sun";
+import { LOCATION, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
@@ -162,30 +163,30 @@ function MonthHeatmap() {
   );
 }
 
-const toMin = (t: string) => { const [h = 0, m = 0] = t.split(":").map(Number); return h * 60 + m; };
 function DaylightBar() {
   const [now, setNow] = useState<number | null>(null);
+  const [sun, setSun] = useState<DayLight | null>(null);
   useEffect(() => {
-    const tick = () => { const d = new Date(); setNow(d.getHours() * 60 + d.getMinutes()); };
+    const tick = () => { const d = new Date(); setNow(minutesInZone(d, LOCATION.timeZone)); setSun(daylightFor(d, LOCATION)); };
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
-  const D = 1440, rise = toMin(DAYLIGHT.sunrise), set = toMin(DAYLIGHT.sunset);
+  const D = 1440;
+  const k = sun ?? { nauticalDawn: 330, civilDawn: 380, sunrise: 410, sunset: 990, civilDusk: 1020, nauticalDusk: 1060 };
+  const rise = k.sunrise, set = k.sunset;
   const segs: [number, number, string][] = [
-    [0, rise - 150, "--sky-night"], [rise - 150, rise - 70, "--sky-astro"], [rise - 70, rise, "--sky-blue"],
+    [0, k.nauticalDawn, "--sky-night"], [k.nauticalDawn, k.civilDawn, "--sky-astro"], [k.civilDawn, rise, "--sky-blue"],
     [rise, set, "--sky-day"],
-    [set, set + 70, "--sky-cyan"], [set + 70, set + 150, "--sky-dusk"], [set + 150, D, "--sky-twilight"],
+    [set, k.civilDusk, "--sky-cyan"], [k.civilDusk, k.nauticalDusk, "--sky-dusk"], [k.nauticalDusk, D, "--sky-twilight"],
   ];
+  const hm = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
   const pc = (m: number) => `${(m / D) * 100}%`;
-  const len = set - rise;
   return (
     <div className="flex w-full flex-col items-center font-mono">
-      <div className="flex items-baseline font-extrabold leading-none">
-        <span className="text-lg">{Math.floor(len / 60)}</span><span className="mr-1 text-[8px] text-muted-foreground">HRS</span>
-        <span className="text-lg">{len % 60}</span><span className="text-[8px] text-muted-foreground">MINS</span>
-      </div>
-      <div className="mt-0.5 text-[9px] font-extrabold tracking-wider text-muted-foreground">DAYLIGHT</div>
+      <div className="text-[9px] font-extrabold tracking-[0.2em] text-muted-foreground">DAYLIGHT</div>
+      <div className="mt-0.5 text-base font-extrabold leading-none">{Math.floor((set - rise) / 60)}h{String((set - rise) % 60).padStart(2, "0")}</div>
+      <div className="mt-0.5 text-[9px] leading-none text-muted-foreground">{hm(rise)}–{hm(set)}</div>
       <div className="my-1 text-xs leading-none text-[var(--sky-day)]">☀</div>
       <div className="flex min-h-0 w-full flex-1 gap-1.5">
         <div className="relative flex w-[30px] flex-col gap-[3px]">
