@@ -11,7 +11,7 @@ Right now every number on the screen is sample data stored in the page itself, s
 
 ## What to decide
 
-- **Who can see the dashboard?** Either anyone with the link (simplest for a shop screen), or a sign-in for your other computers.
+- **Who can see the dashboard?** Anyone with the link can view it (no sign-in). Only the Pi's secret key can change your clock status.
 - **Should the on-screen buttons stay?** They can be kept as a backup, or removed now that the switches are physical.
 
 ## Important: where this gets turned on
