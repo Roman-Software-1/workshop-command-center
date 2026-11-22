@@ -48,3 +48,12 @@ export const MONTH = {
   month: 10,
   hours: Array.from({ length: 30 }, (_, i) => MONTH_SAMPLE[i] ?? null) as (number | null)[],
 };
+
+export const WEEK_TARGET_H = 40;
+export const MONTH_TARGET_H = 160;
+export const monthToDateHours = () => MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
+// Week-to-date: Monday through today from the rolling 7-day sample.
+export function weekToDateHours(today = new Date()): number {
+  const sinceMon = (today.getDay() + 6) % 7; // 0 = Monday
+  return WEEK.slice(6 - sinceMon).reduce((t, d) => t + (d.h ?? 0), 0);
+}

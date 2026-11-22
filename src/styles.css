@@ -84,6 +84,7 @@
 }
 
 :root {
+  --tile-raised: oklch(0.2 0.01 150);
   --status-in: oklch(0.78 0.2 145);
   --status-break: oklch(0.78 0.17 60);
   --status-out: oklch(0.63 0.23 25);

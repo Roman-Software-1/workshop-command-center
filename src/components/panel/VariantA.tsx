@@ -1,4 +1,4 @@
-import { MONTH, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
@@ -11,11 +11,17 @@ export function VariantA({ p }: { p: Panel }) {
         <section className="flex min-h-0 flex-1 flex-col">
           {/* Hero: clock + hours worked */}
           <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
-            <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
-              <Label>Hours worked</Label>
-              <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
-              <div className="mt-2 font-mono text-base text-muted-foreground">
-                Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
+            <div className="flex items-center gap-4 px-5 py-2.5">
+              <div className="flex flex-1 flex-col items-center text-center">
+                <Label>Hours worked</Label>
+                <div className="font-mono text-6xl font-extrabold leading-none">{fmtMin(TODAY.hoursWorkedMin)}</div>
+                <div className="mt-2 font-mono text-base text-muted-foreground">
+                  Break <span className="text-[var(--status-break)]">{fmtMin(TODAY.breakMin)}</span>
+                </div>
+              </div>
+              <div className="flex w-[150px] shrink-0 flex-col gap-2">
+                <ProgressTile label="Week" value={weekToDateHours()} goal={WEEK_TARGET_H} />
+                <ProgressTile label="Month" value={monthToDateHours()} goal={MONTH_TARGET_H} />
               </div>
             </div>
             <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
@@ -60,6 +66,23 @@ export function VariantA({ p }: { p: Panel }) {
   );
 }
 const Label = ({ children }: { children: React.ReactNode }) => <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">{children}</div>;
+function ProgressTile({ label, value, goal }: { label: string; value: number; goal: number }) {
+  const pct = Math.min(100, (value / goal) * 100);
+  const done = value >= goal;
+  return (
+    <div className="relative overflow-hidden rounded-md border border-border bg-[var(--tile-raised)] py-1.5 pl-3 pr-2.5 font-mono">
+      <span className="absolute inset-y-0 left-0 w-[3px] bg-[var(--status-in)] shadow-[0_0_8px_var(--status-in)]" />
+      <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--status-in)]">{label}</div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-lg font-extrabold leading-tight">{value.toFixed(1)}h</span>
+        <span className="text-[10px] text-muted-foreground">of {goal}h</span>
+      </div>
+      <div className="mt-1 h-1 rounded-full bg-muted">
+        <div className="h-full rounded-full bg-[var(--status-in)]" style={{ width: `${pct}%`, filter: done ? "brightness(1.3)" : undefined }} />
+      </div>
+    </div>
+  );
+}
 const Gauge = ({ k, v }: { k: string; v: string }) => (
   <div className="border-r border-border px-5 py-1.5 last:border-r-0"><div className="truncate text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{k}</div><div className="text-2xl font-extrabold">{v}</div></div>
 );
