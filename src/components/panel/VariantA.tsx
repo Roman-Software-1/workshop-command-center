@@ -7,7 +7,8 @@ import { SpotifyWidget } from "./SpotifyWidget";
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p }: { p: Panel }) {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full">
+    <div className="flex h-full min-w-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col">
         <section className="flex min-h-0 flex-1 flex-col">
           {/* Hero: clock + hours worked */}
@@ -63,6 +64,8 @@ export function VariantA({ p }: { p: Panel }) {
           <div className="shrink-0 px-4 py-2"><SpotifyWidget /></div>
         </section>
       </div>
+    </div>
+    <div className="flex w-[84px] shrink-0 border-l border-border px-2 py-3"><DaylightBar /></div>
     </div>
   );
 }
@@ -131,7 +134,7 @@ function MonthHeatmap() {
     h == null ? 0 : h === 0 ? 0.08 : h < 4 ? 0.3 : h < 7 ? 0.55 : h < 9 ? 0.8 : 1;
   const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
-    <div className="flex min-h-0 gap-3 pl-5 pr-3 pt-3 pb-2">
+    <div className="flex min-h-0 gap-3 px-5 pt-3 pb-2">
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-baseline justify-between"><Label>{MONTH.label}</Label><span className="font-mono text-xs text-muted-foreground">{total.toFixed(0)}h</span></div>
       <div className="relative min-h-0 flex-1">
@@ -155,7 +158,6 @@ function MonthHeatmap() {
         More
       </div>
     </div>
-    <DaylightBar />
     </div>
   );
 }
@@ -178,12 +180,13 @@ function DaylightBar() {
   const pc = (m: number) => `${(m / D) * 100}%`;
   const len = set - rise;
   return (
-    <div className="flex w-[78px] shrink-0 flex-col items-center font-mono">
+    <div className="flex w-full flex-col items-center font-mono">
       <div className="flex items-baseline font-extrabold leading-none">
         <span className="text-lg">{Math.floor(len / 60)}</span><span className="mr-1 text-[8px] text-muted-foreground">HRS</span>
         <span className="text-lg">{len % 60}</span><span className="text-[8px] text-muted-foreground">MINS</span>
       </div>
-      <div className="mb-1.5 mt-0.5 text-[9px] font-extrabold tracking-wider text-muted-foreground">DAYLIGHT</div>
+      <div className="mt-0.5 text-[9px] font-extrabold tracking-wider text-muted-foreground">DAYLIGHT</div>
+      <div className="my-1 text-xs leading-none text-[var(--sky-day)]">☀</div>
       <div className="flex min-h-0 w-full flex-1 gap-1.5">
         <div className="relative flex w-[30px] flex-col gap-[3px]">
           {segs.map(([a, b, c]) => {
@@ -201,11 +204,12 @@ function DaylightBar() {
           )}
         </div>
         <div className="relative flex-1 text-[9px] font-bold text-muted-foreground">
-          <span className="absolute top-0 leading-none">☀</span>
-          {[4, 8, 12, 16, 20].map((h) => <span key={h} className="absolute -translate-y-1/2 leading-none" style={{ top: pc(h * 60) }}>{String(h).padStart(2, "0")}</span>)}
-          <span className="absolute bottom-0 leading-none">☾</span>
+          
+          {[0, 4, 8, 12, 16, 20, 24].map((h) => <span key={h} className="absolute -translate-y-1/2 leading-none" style={{ top: pc(h * 60) }}>{String(h).padStart(2, "0")}</span>)}
+          
         </div>
       </div>
+      <div className="mt-1 text-xs leading-none text-[var(--sky-twilight)]">☾</div>
     </div>
   );
 }
