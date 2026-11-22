@@ -7,3 +7,7 @@
 - [x] Daylight bar as full-height right strip
 - [x] Real daylight for Oakland County, MI (America/Detroit)
 - [x] Red-to-green heatmap colors
+
+# Data connections
+
+- [ ] Connect the owner's Rize data to the dashboard; waiting for confirmation of Rize API access before requesting credentials or replacing sample numbers.
