@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Pause, Play, SkipBack, SkipForward, Music } from "lucide-react";
 import { useAccount } from "@/components/account/AuthProvider";
+import { SpotifyModal } from "./SpotifyModal";
 import { getNowPlaying, getSpotifyAccess, spotifyControl, startSpotifyAuth } from "@/lib/spotify.functions";
 
 const fmt = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
@@ -17,6 +18,7 @@ export function SpotifyWidget() {
   const access = useQuery({ queryKey: ["spotify", "access", user?.id], queryFn: () => fetchAccess(), enabled: !!user, retry: false });
   const [tick, setTick] = useState(Date.now());
   const [msg, setMsg] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const np = now.data;
   const playing = np?.status === "playing";
   useEffect(() => { if (!playing) return; const t = setInterval(() => setTick(Date.now()), 1000); return () => clearInterval(t); }, [playing]);
@@ -50,9 +52,12 @@ export function SpotifyWidget() {
 
   if (np.status !== "playing" && np.status !== "paused") return null;
   const progress = Math.min(np.durationMs, np.progressMs + (playing ? tick - np.fetchedAt : 0));
+  const stop = (e: MouseEvent) => e.stopPropagation();
   const btn = "grid h-11 w-11 place-items-center rounded-full bg-secondary text-secondary-foreground disabled:opacity-40";
   return (
-    <section aria-label="Now playing on Spotify" className={shell}>
+    <>
+    <section aria-label="Now playing on Spotify" role="button" tabIndex={0} onClick={() => setOpen(true)}
+      onKeyDown={(e) => e.key === "Enter" && setOpen(true)} className={`${shell} cursor-pointer`}>
       {np.art ? <img src={np.art} alt="" className="h-14 w-14 rounded-md object-cover" /> : <Music className="h-10 w-10" />}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold">{np.title}</div>
@@ -63,9 +68,11 @@ export function SpotifyWidget() {
           <span>{fmt(np.durationMs)}</span>
         </div>
       </div>
-      <button aria-label="Previous" disabled={!canControl || act.isPending} onClick={() => act.mutate("previous")} className={btn}><SkipBack className="h-5 w-5" /></button>
-      <button aria-label={playing ? "Pause" : "Play"} disabled={!canControl || act.isPending} onClick={() => act.mutate(playing ? "pause" : "play")} className={btn}>{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>
-      <button aria-label="Next" disabled={!canControl || act.isPending} onClick={() => act.mutate("next")} className={btn}><SkipForward className="h-5 w-5" /></button>
+      <button aria-label="Previous" disabled={!canControl || act.isPending} onClick={(e) => { stop(e); act.mutate("previous"); }} className={btn}><SkipBack className="h-5 w-5" /></button>
+      <button aria-label={playing ? "Pause" : "Play"} disabled={!canControl || act.isPending} onClick={(e) => { stop(e); act.mutate(playing ? "pause" : "play"); }} className={btn}>{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>
+      <button aria-label="Next" disabled={!canControl || act.isPending} onClick={(e) => { stop(e); act.mutate("next"); }} className={btn}><SkipForward className="h-5 w-5" /></button>
     </section>
+    {open && <SpotifyModal np={np} progress={progress} canControl={canControl} onClose={() => setOpen(false)} onChanged={() => void now.refetch()} />}
+    </>
   );
 }

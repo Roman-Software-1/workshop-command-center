@@ -3,7 +3,7 @@ export type NowPlaying =
   | { status: "playing" | "paused"; title: string; artists: string; art: string | null; progressMs: number; durationMs: number; fetchedAt: number }
   | { status: "idle" | "disconnected" | "error"; fetchedAt: number };
 
-export const SPOTIFY_SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state";
+export const SPOTIFY_SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-library-read user-library-modify playlist-read-private";
 
 const enc = new TextEncoder();
 const b64url = (buf: ArrayBuffer | Uint8Array) =>
@@ -48,3 +48,19 @@ export function projectNowPlaying(raw: unknown, fetchedAt = Date.now()): NowPlay
     fetchedAt,
   };
 }
+
+export type PlayerAction =
+  | { action: "play" | "pause" | "next" | "previous" | "like" | "unlike" }
+  | { action: "shuffle"; on: boolean }
+  | { action: "repeat"; mode: "off" | "context" | "track" }
+  | { action: "seek"; ms: number }
+  | { action: "volume"; percent: number }
+  | { action: "device"; id: string }
+  | { action: "playlist"; uri: string };
+
+export type PlayerDetails = {
+  shuffle: boolean; repeat: "off" | "context" | "track"; volume: number | null; liked: boolean | null;
+  devices: { id: string; name: string; type: string; active: boolean }[];
+  queue: { title: string; artists: string }[];
+  playlists: { uri: string; name: string; art: string | null }[];
+};

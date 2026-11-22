@@ -3,7 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { signState, SPOTIFY_SCOPES } from "./spotify-core";
-import { control, fetchNowPlaying, getOwnerId } from "./spotify.server";
+import { control, fetchDetails, fetchNowPlaying, getOwnerId } from "./spotify.server";
 
 export const getNowPlaying = createServerFn({ method: "GET" }).handler(() => fetchNowPlaying());
 
@@ -31,11 +31,32 @@ export const startSpotifyAuth = createServerFn({ method: "POST" })
     return { url: url.toString() };
   });
 
+export const playerActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.enum(["play", "pause", "next", "previous", "like", "unlike"]) }),
+  z.object({ action: z.literal("shuffle"), on: z.boolean() }),
+  z.object({ action: z.literal("repeat"), mode: z.enum(["off", "context", "track"]) }),
+  z.object({ action: z.literal("seek"), ms: z.number().int().min(0).max(24 * 3600 * 1000) }),
+  z.object({ action: z.literal("volume"), percent: z.number().int().min(0).max(100) }),
+  z.object({ action: z.literal("device"), id: z.string().min(1).max(100) }),
+  z.object({ action: z.literal("playlist"), uri: z.string().regex(/^spotify:playlist:[A-Za-z0-9]+$/) }),
+]);
+
+async function requireOwner(userId: string) {
+  if ((await getOwnerId()) !== userId) throw new Error("Only the Spotify owner can control playback");
+}
+
 export const spotifyControl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ action: z.enum(["play", "pause", "next", "previous"]) }).parse(d))
+  .inputValidator((d) => playerActionSchema.parse(d))
   .handler(async ({ data, context }) => {
-    if ((await getOwnerId()) !== context.userId) throw new Error("Only the Spotify owner can control playback");
-    await control(data.action);
+    await requireOwner(context.userId);
+    await control(data);
     return { ok: true };
+  });
+
+export const getPlayerDetails = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireOwner(context.userId);
+    return fetchDetails();
   });

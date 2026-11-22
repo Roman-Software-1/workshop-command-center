@@ -1,4 +1,4 @@
-import { projectNowPlaying, type NowPlaying } from "./spotify-core";
+import { projectNowPlaying, type NowPlaying, type PlayerAction, type PlayerDetails } from "./spotify-core";
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const API = "https://api.spotify.com/v1";
@@ -77,15 +77,60 @@ export async function fetchNowPlaying(): Promise<NowPlaying> {
   return value;
 }
 
-export async function control(action: "play" | "pause" | "next" | "previous") {
+async function call(path: string, init: RequestInit = {}) {
   const token = await accessToken();
   if (!token) throw new Error("Spotify is not connected");
-  const path = action === "next" || action === "previous" ? `/me/player/${action}` : `/me/player/${action}`;
-  const res = await fetch(`${API}${path}`, { method: action === "play" || action === "pause" ? "PUT" : "POST", headers: { Authorization: `Bearer ${token}` } });
-  cache = null;
+  const res = await fetch(`${API}${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
   if (!res.ok && res.status !== 204) {
-    const body = await res.text();
-    console.error(`Spotify control failed [${res.status}]: ${body.slice(0, 200)}`);
-    throw new Error(res.status === 404 ? "No active Spotify device. Start playing on your phone first." : `Spotify refused the command [${res.status}]`);
+    console.error(`Spotify ${path} failed [${res.status}]: ${(await res.text()).slice(0, 200)}`);
+    if (res.status === 404) throw new Error("No active Spotify device. Start playing on your phone first.");
+    if (res.status === 403 || res.status === 401) throw new Error("Spotify needs to be reconnected for this option.");
+    throw new Error(`Spotify refused the command [${res.status}]`);
   }
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+
+export async function control(a: PlayerAction) {
+  cache = null;
+  switch (a.action) {
+    case "play": case "pause": return call(`/me/player/${a.action}`, { method: "PUT" });
+    case "next": case "previous": return call(`/me/player/${a.action}`, { method: "POST" });
+    case "shuffle": return call(`/me/player/shuffle?state=${a.on}`, { method: "PUT" });
+    case "repeat": return call(`/me/player/repeat?state=${a.mode}`, { method: "PUT" });
+    case "seek": return call(`/me/player/seek?position_ms=${Math.round(a.ms)}`, { method: "PUT" });
+    case "volume": return call(`/me/player/volume?volume_percent=${Math.round(a.percent)}`, { method: "PUT" });
+    case "device": return call(`/me/player`, { method: "PUT", body: JSON.stringify({ device_ids: [a.id], play: true }) });
+    case "playlist": return call(`/me/player/play`, { method: "PUT", body: JSON.stringify({ context_uri: a.uri }) });
+    case "like": case "unlike": {
+      const id = await currentTrackId();
+      if (!id) throw new Error("Nothing playing to like");
+      return call(`/me/tracks?ids=${id}`, { method: a.action === "like" ? "PUT" : "DELETE" });
+    }
+  }
+}
+
+async function currentTrackId(): Promise<string | null> {
+  const p = (await call("/me/player")) as { item?: { id?: string } } | null;
+  return p?.item?.id ?? null;
+}
+
+const safe = async <T,>(f: () => Promise<T>, d: T) => { try { return await f(); } catch { return d; } };
+
+export async function fetchDetails(): Promise<PlayerDetails> {
+  type P = { shuffle_state?: boolean; repeat_state?: PlayerDetails["repeat"]; device?: { volume_percent?: number | null }; item?: { id?: string } };
+  type Art = { name: string; artists?: { name: string }[] };
+  const [p, dev, q, pl] = await Promise.all([
+    safe(() => call("/me/player") as Promise<P | null>, null),
+    safe(() => call("/me/player/devices") as Promise<{ devices: { id: string | null; name: string; type: string; is_active: boolean }[] }>, { devices: [] }),
+    safe(() => call("/me/player/queue") as Promise<{ queue: Art[] }>, { queue: [] }),
+    safe(() => call("/me/playlists?limit=4") as Promise<{ items: { uri: string; name: string; images?: { url: string }[] | null }[] }>, { items: [] }),
+  ]);
+  const id = p?.item?.id;
+  const liked = id ? await safe(async () => ((await call(`/me/tracks/contains?ids=${id}`)) as boolean[])[0] ?? null, null) : null;
+  return {
+    shuffle: !!p?.shuffle_state, repeat: p?.repeat_state ?? "off", volume: p?.device?.volume_percent ?? null, liked,
+    devices: (dev?.devices ?? []).filter((d) => d.id).map((d) => ({ id: d.id as string, name: d.name, type: d.type, active: d.is_active })),
+    queue: (q?.queue ?? []).slice(0, 3).map((t) => ({ title: t.name, artists: (t.artists ?? []).map((a) => a.name).join(", ") })),
+    playlists: (pl?.items ?? []).filter(Boolean).slice(0, 4).map((x) => ({ uri: x.uri, name: x.name, art: x.images?.[0]?.url ?? null })),
+  };
 }

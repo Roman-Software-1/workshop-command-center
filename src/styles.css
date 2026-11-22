@@ -431,3 +431,13 @@
 @media (prefers-reduced-motion: reduce) {
   .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span { animation: none; }
 }
+
+/* Music pop-up (design A) */
+.music-scrim {
+  backdrop-filter: blur(18px) saturate(140%);
+  background: color-mix(in oklch, var(--background) 55%, transparent);
+  animation: music-fade 180ms ease-out;
+}
+.music-card { animation: music-pop 220ms cubic-bezier(.2,.9,.3,1.1); }
+@keyframes music-fade { from { opacity: 0; } }
+@keyframes music-pop { from { opacity: 0; transform: scale(.94); } }
