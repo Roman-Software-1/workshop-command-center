@@ -21,7 +21,7 @@ export const Route = createFileRoute("/a")({
 });
 
 function Page() {
-  const p = usePanel();
+  const p = usePanel({ sync: true });
   const { data } = useSuspenseQuery(rizeTotalsQuery);
   return (
     <Frame status={p.status} variant="a">

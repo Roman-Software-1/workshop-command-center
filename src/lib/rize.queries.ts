@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getRizeTotals } from "./rize.functions";
+import { getClockState, getRizeTotals } from "./rize.functions";
 
 export const rizeTotalsQuery = queryOptions({
   queryKey: ["rize", "public-totals"],
@@ -10,5 +10,13 @@ export const rizeTotalsQuery = queryOptions({
   refetchIntervalInBackground: true,
   refetchOnWindowFocus: "always",
   refetchOnReconnect: "always",
+  retry: false,
+});
+export const clockStateQuery = queryOptions({
+  queryKey: ["rize", "clock-state"],
+  queryFn: () => getClockState(),
+  refetchInterval: 15_000,
+  refetchIntervalInBackground: true,
+  refetchOnWindowFocus: "always",
   retry: false,
 });
