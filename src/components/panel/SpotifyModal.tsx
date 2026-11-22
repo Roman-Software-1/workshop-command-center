@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
+import { useAccount } from "@/components/account/AuthProvider";
 import { Heart, Music, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Speaker, Volume1, Volume2, X } from "lucide-react";
-import { getPlayerDetails, spotifyControl } from "@/lib/spotify.functions";
+import { getPlayerDetails, getUpNext, spotifyControl } from "@/lib/spotify.functions";
 import type { NowPlaying, PlayerAction } from "@/lib/spotify-core";
 import { clampVolume, MUSIC_MODAL_IDLE_MS } from "@/lib/music-modal";
 
@@ -14,6 +16,9 @@ export function SpotifyModal({ np, progress, canControl, onClose, onChanged }: P
   const ctrl = useServerFn(spotifyControl);
   const details = useServerFn(getPlayerDetails);
   const d = useQuery({ queryKey: ["spotify", "details"], queryFn: () => details(), enabled: canControl, refetchInterval: 5000, retry: false });
+  const { user } = useAccount();
+  const upNextFn = useServerFn(getUpNext);
+  const upNext = useQuery({ queryKey: ["spotify", "upnext"], queryFn: () => upNextFn(), refetchInterval: 5000, retry: false });
   const [msg, setMsg] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchY = useRef<number | null>(null);
@@ -42,15 +47,15 @@ export function SpotifyModal({ np, progress, canControl, onClose, onChanged }: P
       onTouchEnd={(e) => { const y = e.changedTouches[0]?.clientY; if (touchY.current !== null && y !== undefined && y - touchY.current > 90) onClose(); touchY.current = null; }}>
       <div role="dialog" aria-label="Music controls" onClick={(e) => e.stopPropagation()}
         className="music-card relative flex h-[460px] w-[760px] gap-6 rounded-3xl border border-border bg-card p-6 shadow-2xl">
-        <button aria-label="Close" onClick={onClose} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-secondary"><X className="h-5 w-5" /></button>
+        <button aria-label="Close" onClick={onClose} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-secondary text-secondary-foreground"><X className="h-5 w-5" /></button>
 
         <div className="flex w-[230px] shrink-0 flex-col gap-3">
           {live?.art ? <img src={live.art} alt="" className="h-[230px] w-[230px] rounded-2xl object-cover shadow-lg" />
             : <div className="grid h-[230px] w-[230px] place-items-center rounded-2xl bg-muted"><Music className="h-16 w-16 text-muted-foreground" /></div>}
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Up next</div>
-          <ul className="space-y-1 text-sm">
-            {info?.queue.length ? info.queue.map((q, i) => <li key={i} className="truncate"><span className="font-medium">{q.title}</span> <span className="text-muted-foreground">· {q.artists}</span></li>)
-              : <li className="text-muted-foreground">{canControl ? "Nothing queued" : "Sign in to see"}</li>}
+          <ul className="min-h-0 flex-1 space-y-1 overflow-hidden text-sm">
+            {upNext.data?.length ? upNext.data.map((q, i) => <li key={i} className="truncate"><span className="font-medium">{q.title}</span> <span className="text-muted-foreground">· {q.artists}</span></li>)
+              : <li className="text-muted-foreground">{upNext.isLoading ? "Loading…" : "Nothing queued"}</li>}
           </ul>
         </div>
 
@@ -96,6 +101,11 @@ export function SpotifyModal({ np, progress, canControl, onClose, onChanged }: P
             )) : <span className="text-sm text-muted-foreground">No devices found</span>}
           </div>
 
+          {!canControl && (
+            <div className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm">
+              {user ? "This account isn't the one connected to Spotify." : <>Controls are locked. <Link to="/auth" className="font-semibold underline">Sign in</Link> to pause, skip and change songs.</>}
+            </div>
+          )}
           <div className="mt-auto grid grid-cols-4 gap-2">
             {info?.playlists.map((p) => (
               <button key={p.uri} disabled={dis} onClick={() => go({ action: "playlist", uri: p.uri })} className={`${chip} flex items-center gap-2 text-left`}>

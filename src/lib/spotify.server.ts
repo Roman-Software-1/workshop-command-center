@@ -134,3 +134,13 @@ export async function fetchDetails(): Promise<PlayerDetails> {
     playlists: (pl?.items ?? []).filter(Boolean).slice(0, 4).map((x) => ({ uri: x.uri, name: x.name, art: x.images?.[0]?.url ?? null })),
   };
 }
+
+let queueCache: { at: number; value: { title: string; artists: string }[] } | null = null;
+export async function fetchUpNext() {
+  if (queueCache && Date.now() - queueCache.at < 5000) return queueCache.value;
+  type Art = { name: string; artists?: { name: string }[] };
+  const q = await safe(() => call("/me/player/queue") as Promise<{ queue: Art[] } | null>, null);
+  const value = (q?.queue ?? []).slice(0, 5).map((t) => ({ title: t.name, artists: (t.artists ?? []).map((a) => a.name).join(", ") }));
+  queueCache = { at: Date.now(), value };
+  return value;
+}

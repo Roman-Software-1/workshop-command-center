@@ -3,7 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { signState, SPOTIFY_SCOPES } from "./spotify-core";
-import { control, fetchDetails, fetchNowPlaying, getOwnerId } from "./spotify.server";
+import { control, fetchDetails, fetchUpNext, fetchNowPlaying, getOwnerId } from "./spotify.server";
 
 export const getNowPlaying = createServerFn({ method: "GET" }).handler(() => fetchNowPlaying());
 
@@ -60,3 +60,5 @@ export const getPlayerDetails = createServerFn({ method: "GET" })
     await requireOwner(context.userId);
     return fetchDetails();
   });
+
+export const getUpNext = createServerFn({ method: "GET" }).handler(() => fetchUpNext());
