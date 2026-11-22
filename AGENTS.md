@@ -30,3 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 - Keep design A at the physical screen's native dimensions, using layout spacing rather than transforms or stretched content; B and C remain legacy design previews.
+- Frost status feedback only in design A, using standard backdrop-filter; unmount feedback after its finite animation with a timeout fallback so the dashboard never stays blurred.

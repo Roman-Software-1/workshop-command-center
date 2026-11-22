@@ -307,6 +307,20 @@
 
 /* Status change burst */
 .status-burst { animation: burst-bg 1.6s ease-out forwards; }
+.status-burst[data-frosted="true"] {
+  backdrop-filter: blur(10px);
+  background: color-mix(in oklch, var(--background) 78%, transparent);
+  animation: burst-frost 1.6s ease-out forwards;
+}
+.status-burst[data-frosted="true"] .status-burst-text {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 12px var(--status);
+}
+@keyframes burst-frost {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
 .status-burst-ring {
   position: absolute; width: 120px; height: 120px; border-radius: 9999px;
   border: 8px solid var(--status); animation: burst-ring 1.2s ease-out forwards;
