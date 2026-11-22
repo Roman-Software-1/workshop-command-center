@@ -48,6 +48,7 @@ export function SpotifyWidget() {
     );
   }
 
+  if (np.status !== "playing" && np.status !== "paused") return null;
   const progress = Math.min(np.durationMs, np.progressMs + (playing ? tick - np.fetchedAt : 0));
   const btn = "grid h-11 w-11 place-items-center rounded-full bg-secondary text-secondary-foreground disabled:opacity-40";
   return (
