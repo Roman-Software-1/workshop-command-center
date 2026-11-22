@@ -10,4 +10,5 @@
 
 # Data connections
 
-- [ ] Connect the owner's Rize data to the dashboard; waiting for confirmation of Rize API access before requesting credentials or replacing sample numbers.
+- [x] Connect the owner's Rize account securely and verify account access.
+- [ ] Replace dashboard sample numbers with available Rize metrics; waiting for the owner to choose who may view real numbers.
