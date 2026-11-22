@@ -1,5 +1,7 @@
 # Spotify
 
+- [ ] Fix Spotify with a sign-in flow; waiting for the choice between playback on the workshop screen and controlling another device.
+
 - [x] Official Spotify embed on screen A (sample playlist until user sends theirs).
 - [x] Rolling last 7 days chart
 - [x] Week/month progress tiles beside hours worked
