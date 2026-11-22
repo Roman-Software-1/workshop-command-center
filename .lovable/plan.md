@@ -1,7 +1,7 @@
 # Break type picker + big break timer (design A)
 
 ## What you'll see
-1. Tap **Break** → a frosted pop-up in the middle asks: **Bathroom**, **Coffee**, or **General** (big touch buttons, plus Cancel). Nothing changes until you pick one.
+1. Tap **Break** → a frosted pop-up in the middle asks: with three large icon buttons — toilet, coffee cup, pause — each with a small label underneath (plus Cancel). Nothing changes until you pick one.
 2. After picking, the screen stays in break mode (orange border) with a large centered card over a blurred dashboard:
    - Break type with an icon (e.g. "Coffee break")
    - Big timer counting up (m:ss, switches to h:mm:ss past an hour)
@@ -19,8 +19,8 @@ Step 1 — after tapping Break:
 |            |           What kind of break?              |            |
 |            |                                            |            |
 |            |  +----------+  +----------+  +----------+  |            |
-|            |  |   WC     |  |   CUP    |  |  PAUSE   |  |            |
-|            |  | Bathroom |  |  Coffee  |  | General  |  |            |
+|            |  |   [WC]   |  |  [CUP]   |  |   [||]   |  |            |
+|            |  | bathroom |  |  coffee  |  | general  |  |            |
 |            |  +----------+  +----------+  +----------+  |            |
 |            |                                            |            |
 |            |                 [ Cancel ]                 |            |
@@ -55,4 +55,5 @@ Buttons are big enough to hit with gloves; the timer is readable from across the
 - New `BreakPicker.tsx` and `BreakOverlay.tsx` in `src/components/panel/`, rendered by VariantA inside the frame (z above content, reuse `music-scrim` frosted style).
 - Break button opens the picker instead of calling `setStatus("break")` directly.
 - Skip StatusBurst when entering break in A.
+- Icons from lucide-react: Toilet, Coffee, Pause (large, ~64px; label text-xs).
 - Tests: picker choice sets status + kind; timer counts from start time; ending break clears it.
