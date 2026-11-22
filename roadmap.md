@@ -6,3 +6,4 @@
 - [x] Vertical daylight bar in month block
 - [x] Daylight bar as full-height right strip
 - [x] Real daylight for Oakland County, MI (America/Detroit)
+- [x] Red-to-green heatmap colors

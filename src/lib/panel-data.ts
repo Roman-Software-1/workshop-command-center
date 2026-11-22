@@ -60,3 +60,13 @@ export function weekToDateHours(today = new Date()): number {
 
 // Workshop location for the daylight bar (edit to change city / time zone).
 export const LOCATION = { name: "Oakland County, MI", lat: 42.66, lon: -83.39, timeZone: "America/Detroit" };
+
+/** Heatmap color for a day's hours: 0 = off, red <3, orange <5, yellow <7, lime <8, green 8+. */
+export function heatColor(h: number): string {
+  if (h <= 0) return "var(--muted)";
+  if (h < 3) return "var(--heat-1)";
+  if (h < 5) return "var(--heat-2)";
+  if (h < 7) return "var(--heat-3)";
+  if (h < 8) return "var(--heat-4)";
+  return "var(--heat-5)";
+}

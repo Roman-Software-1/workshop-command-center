@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { daylightFor, minutesInZone, type DayLight } from "@/lib/sun";
-import { LOCATION, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
+import { heatColor, LOCATION, MONTH, MONTH_TARGET_H, WEEK_TARGET_H, monthToDateHours, weekToDateHours, RIZE, WEEK, WEEK_GOAL, STATUS_LABEL, TODAY, fmtMin } from "@/lib/panel-data";
 import type { Panel } from "./usePanel";
 import { IndicatorLight } from "./IndicatorLights";
 import { SpotifyWidget } from "./SpotifyWidget";
@@ -131,8 +131,6 @@ function MonthHeatmap() {
   const first = new Date(MONTH.year, MONTH.month, 1).getDay(); // 0=Sun
   const lead = (first + 6) % 7; // Monday-first
   const cells: (number | null | undefined)[] = [...Array(lead).fill(undefined), ...MONTH.hours];
-  const level = (h: number | null | undefined) =>
-    h == null ? 0 : h === 0 ? 0.08 : h < 4 ? 0.3 : h < 7 ? 0.55 : h < 9 ? 0.8 : 1;
   const total = MONTH.hours.reduce<number>((t, h) => t + (h ?? 0), 0);
   return (
     <div className="flex min-h-0 gap-3 px-5 pt-3 pb-2">
@@ -146,15 +144,15 @@ function MonthHeatmap() {
             key={i}
             title={h != null ? `${h}h` : undefined}
             className={`rounded-[4px] ${h === undefined ? "" : "border border-border"}`}
-            style={h === undefined ? undefined : { background: h === null ? "transparent" : `color-mix(in oklch, var(--status-in) ${level(h) * 100}%, transparent)` }}
+            style={h === undefined ? undefined : { background: h === null ? "transparent" : heatColor(h) }}
           />
         ))}
       </div>
       </div>
       <div className="flex shrink-0 items-center justify-end gap-1 pt-1 font-mono text-[10px] text-muted-foreground">
         Less
-        {[0.08, 0.3, 0.55, 0.8, 1].map((l) => (
-          <span key={l} className="h-3 w-3 rounded-[3px]" style={{ background: `color-mix(in oklch, var(--status-in) ${l * 100}%, transparent)` }} />
+        {[1, 2, 3, 4, 5].map((l) => (
+          <span key={l} className="h-3 w-3 rounded-[3px]" style={{ background: `var(--heat-${l})` }} />
         ))}
         More
       </div>

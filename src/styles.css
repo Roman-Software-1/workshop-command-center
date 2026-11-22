@@ -84,6 +84,11 @@
 }
 
 :root {
+  --heat-1: oklch(0.62 0.21 25);
+  --heat-2: oklch(0.72 0.18 55);
+  --heat-3: oklch(0.85 0.17 95);
+  --heat-4: oklch(0.8 0.18 130);
+  --heat-5: oklch(0.72 0.2 145);
   --sky-night: oklch(0.36 0.12 285);
   --sky-astro: oklch(0.36 0.1 255);
   --sky-blue: oklch(0.42 0.07 220);
