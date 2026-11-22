@@ -9,6 +9,42 @@
 3. The card stays until you end the break — it doesn't fade away. Tapping outside does nothing, so it can't be dismissed by accident.
 4. The clock's status line reads e.g. "On break · Coffee".
 
+## Sketches (1024x600, dashboard blurred behind)
+
+Step 1 — after tapping Break:
+```text
++==================== orange-tinted frosted screen ====================+
+|                                                                      |
+|            +--------------------------------------------+            |
+|            |           What kind of break?              |            |
+|            |                                            |            |
+|            |  +----------+  +----------+  +----------+  |            |
+|            |  |   WC     |  |   CUP    |  |  PAUSE   |  |            |
+|            |  | Bathroom |  |  Coffee  |  | General  |  |            |
+|            |  +----------+  +----------+  +----------+  |            |
+|            |                                            |            |
+|            |                 [ Cancel ]                 |            |
+|            +--------------------------------------------+            |
++======================================================================+
+```
+
+Step 2 — while on break (stays until you end it):
+```text
++================= glowing orange border, blurred dashboard ==============+
+|                                                                        |
+|                         CUP  COFFEE BREAK                              |
+|                                                                        |
+|                        ##   ##  :  ##   ##                             |
+|                           12 : 47        (huge orange numbers)         |
+|                                                                        |
+|                       started 4:08 PM                                  |
+|                                                                        |
+|           [   BACK TO WORK   ]        [   CLOCK OUT   ]                |
+|              (green, large)              (red, large)                  |
++========================================================================+
+```
+Buttons are big enough to hit with gloves; the timer is readable from across the shop.
+
 ## Notes
 - The break timer starts at 0 each break and survives a page refresh on this screen (saved on the device).
 - Break type is display-only for now; it isn't sent to Rize or ClickUp. The "Break" number from Rize stays as is.
