@@ -169,24 +169,43 @@ function DaylightBar() {
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
-  const D = 1440, rise = toMin(DAYLIGHT.sunrise), set = toMin(DAYLIGHT.sunset), tw = DAYLIGHT.twilightMin;
+  const D = 1440, rise = toMin(DAYLIGHT.sunrise), set = toMin(DAYLIGHT.sunset);
+  const segs: [number, number, string][] = [
+    [0, rise - 150, "--sky-night"], [rise - 150, rise - 70, "--sky-astro"], [rise - 70, rise, "--sky-blue"],
+    [rise, set, "--sky-day"],
+    [set, set + 70, "--sky-cyan"], [set + 70, set + 150, "--sky-dusk"], [set + 150, D, "--sky-twilight"],
+  ];
   const pc = (m: number) => `${(m / D) * 100}%`;
-  const bg = `linear-gradient(to bottom, var(--sky-night) 0 ${pc(rise - tw)}, var(--sky-twilight) ${pc(rise - tw)} ${pc(rise)}, var(--sky-day) ${pc(rise)} ${pc(set)}, var(--sky-twilight) ${pc(set)} ${pc(set + tw)}, var(--sky-night) ${pc(set + tw)} 100%)`;
   const len = set - rise;
   return (
-    <div className="flex w-[58px] shrink-0 flex-col items-center font-mono">
-      <div className="text-xs font-extrabold leading-none">{Math.floor(len / 60)}h {len % 60}m</div>
-      <div className="mb-1 text-[8px] uppercase tracking-[0.2em] text-[var(--sky-day)]">Daylight</div>
-      <div className="text-[10px] leading-none text-[var(--sky-day)]">☀</div>
-      <div className="relative my-1 flex min-h-0 w-full flex-1">
-        <div className="relative w-[18px] flex-1 overflow-hidden rounded-md border border-border" style={{ background: bg, maxWidth: 18 }}>
-          {now != null && <div className="absolute inset-x-0 h-[2px] -translate-y-1/2 bg-foreground shadow-[0_0_6px_var(--foreground)]" style={{ top: pc(now) }} />}
+    <div className="flex w-[78px] shrink-0 flex-col items-center font-mono">
+      <div className="flex items-baseline font-extrabold leading-none">
+        <span className="text-lg">{Math.floor(len / 60)}</span><span className="mr-1 text-[8px] text-muted-foreground">HRS</span>
+        <span className="text-lg">{len % 60}</span><span className="text-[8px] text-muted-foreground">MINS</span>
+      </div>
+      <div className="mb-1.5 mt-0.5 text-[9px] font-extrabold tracking-wider text-muted-foreground">DAYLIGHT</div>
+      <div className="flex min-h-0 w-full flex-1 gap-1.5">
+        <div className="relative flex w-[30px] flex-col gap-[3px]">
+          {segs.map(([a, b, c]) => {
+            const past = c === "--sky-day" && now != null ? Math.max(0, Math.min(1, (now - a) / (b - a))) : 0;
+            return (
+              <div key={c} className="relative overflow-hidden rounded-[7px]" style={{ flexGrow: b - a, flexBasis: 0, background: `var(${c})` }}>
+                {past > 0 && <div className="absolute inset-x-0 top-0 bg-background/55" style={{ height: `${past * 100}%` }} />}
+              </div>
+            );
+          })}
+          {now != null && (
+            <div className="absolute -left-[5px] -translate-y-1/2" style={{ top: pc(now) }}>
+              <div className="h-0 w-0 border-y-[4px] border-l-[6px] border-y-transparent border-l-foreground" />
+            </div>
+          )}
         </div>
-        <div className="relative ml-1 flex-1 text-[9px] text-muted-foreground">
+        <div className="relative flex-1 text-[9px] font-bold text-muted-foreground">
+          <span className="absolute top-0 leading-none">☀</span>
           {[4, 8, 12, 16, 20].map((h) => <span key={h} className="absolute -translate-y-1/2 leading-none" style={{ top: pc(h * 60) }}>{String(h).padStart(2, "0")}</span>)}
+          <span className="absolute bottom-0 leading-none">☾</span>
         </div>
       </div>
-      <div className="text-[10px] leading-none text-[var(--sky-twilight)]">☾</div>
     </div>
   );
 }

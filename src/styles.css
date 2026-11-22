@@ -84,9 +84,13 @@
 }
 
 :root {
-  --sky-night: oklch(0.28 0.08 265);
-  --sky-twilight: oklch(0.45 0.16 295);
-  --sky-day: oklch(0.86 0.17 92);
+  --sky-night: oklch(0.36 0.12 285);
+  --sky-astro: oklch(0.36 0.1 255);
+  --sky-blue: oklch(0.42 0.07 220);
+  --sky-day: oklch(0.87 0.18 95);
+  --sky-cyan: oklch(0.8 0.15 220);
+  --sky-dusk: oklch(0.6 0.2 255);
+  --sky-twilight: oklch(0.58 0.2 285);
   --tile-raised: oklch(0.2 0.01 150);
   --status-in: oklch(0.78 0.2 145);
   --status-break: oklch(0.78 0.17 60);
