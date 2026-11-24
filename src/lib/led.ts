@@ -1,0 +1,103 @@
+import { useEffect, useState } from "react";
+import type { WorkStatus } from "./panel-data";
+
+export type LedState = {
+  on: boolean;
+  hue: number;
+  sat: number;
+  brightness: number;
+  preset: string | null;
+};
+
+export type LedPreset = {
+  id: string;
+  label: string;
+  hue: number;
+  sat: number;
+};
+
+export const LED_STORAGE_KEY = "workshop-bar-led";
+
+export const DEFAULT_LED: LedState = {
+  on: true,
+  hue: 38,
+  sat: 45,
+  brightness: 80,
+  preset: "warm",
+};
+
+export const LED_PRESETS: readonly LedPreset[] = [
+  { id: "warm", label: "Warm white", hue: 38, sat: 45 },
+  { id: "cool", label: "Cool white", hue: 205, sat: 25 },
+  { id: "amber", label: "Amber", hue: 32, sat: 95 },
+  { id: "red", label: "Red", hue: 4, sat: 90 },
+  { id: "green", label: "Green", hue: 142, sat: 80 },
+  { id: "blue", label: "Blue", hue: 215, sat: 90 },
+  { id: "purple", label: "Purple", hue: 278, sat: 82 },
+];
+
+const STATUS_HS: Record<WorkStatus, { hue: number; sat: number }> = {
+  in: { hue: 142, sat: 85 },
+  break: { hue: 32, sat: 95 },
+  out: { hue: 4, sat: 88 },
+};
+
+export const clampBrightness = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
+
+export function resolveLedHS(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
+  if (state.preset === "status") return STATUS_HS[status];
+  return { hue: ((Math.round(state.hue) % 360) + 360) % 360, sat: Math.max(0, Math.min(100, Math.round(state.sat))) };
+}
+
+export function ledCss(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
+  const { hue, sat } = resolveLedHS(state, status);
+  const light = Math.round(52 + ((100 - sat) / 100) * 40);
+  return `hsl(${hue} ${sat}% ${light}%)`;
+}
+
+export function useLed() {
+  const [led, setLed] = useState<LedState>(DEFAULT_LED);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(LED_STORAGE_KEY) ?? "null");
+      if (raw && typeof raw.on === "boolean" && typeof raw.hue === "number" && typeof raw.sat === "number") {
+        setLed({
+          on: raw.on,
+          hue: raw.hue,
+          sat: raw.sat,
+          brightness: clampBrightness(typeof raw.brightness === "number" ? raw.brightness : DEFAULT_LED.brightness),
+          preset: typeof raw.preset === "string" ? raw.preset : null,
+        });
+      }
+    } catch { /* ignore */ }
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(LED_STORAGE_KEY, JSON.stringify(led));
+    } catch { /* ignore */ }
+  }, [led, loaded]);
+
+  const setColor = (hue: number, sat: number) =>
+    setLed((s) => ({ ...s, on: true, hue, sat, preset: null }));
+
+  const applyPreset = (id: string) => {
+    if (id === "status") {
+      setLed((s) => ({ ...s, on: true, preset: "status" }));
+      return;
+    }
+    const p = LED_PRESETS.find((x) => x.id === id);
+    if (p) setLed((s) => ({ ...s, on: true, hue: p.hue, sat: p.sat, preset: p.id }));
+  };
+
+  const setBrightness = (v: number) =>
+    setLed((s) => ({ ...s, brightness: clampBrightness(v) }));
+
+  const toggle = () => setLed((s) => ({ ...s, on: !s.on }));
+
+  return { led, setColor, applyPreset, setBrightness, toggle };
+}

@@ -429,7 +429,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span { animation: none; }
+  .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span, .led-pill-glow { animation: none; }
 }
 
 /* Music pop-up (design A) */
@@ -441,3 +441,50 @@
 .music-card { animation: music-pop 220ms cubic-bezier(.2,.9,.3,1.1); }
 @keyframes music-fade { from { opacity: 0; } }
 @keyframes music-pop { from { opacity: 0; transform: scale(.94); } }
+
+/* Bar counter LED pill + brightness slider (design A) */
+.led-pill[data-on="true"] {
+  border-color: color-mix(in oklch, var(--led) 70%, var(--border));
+  background: color-mix(in oklch, var(--led) 18%, var(--card));
+  box-shadow: 0 0 18px -2px color-mix(in oklch, var(--led) 70%, transparent);
+}
+.led-pill[data-on="false"] {
+  border-color: var(--border);
+  background: var(--muted);
+}
+.led-pill[data-on="true"] .led-pill-glow {
+  background: var(--led);
+  animation: led-breathe 3s ease-in-out infinite alternate;
+}
+@keyframes led-breathe {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+.led-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--muted);
+  outline: none;
+}
+.led-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--led, var(--foreground));
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 2px var(--foreground);
+  cursor: pointer;
+}
+.led-slider::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--led, var(--foreground));
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 2px var(--foreground);
+  cursor: pointer;
+}

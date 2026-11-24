@@ -8,9 +8,14 @@ import { SpotifyWidget } from "./SpotifyWidget";
 import { AccountButton } from "@/components/account/AccountButton";
 import { BreakOverlay, BreakPicker } from "./BreakOverlay";
 import { BREAK_LABEL } from "@/lib/break";
+import { useLed } from "@/lib/led";
+import { LedPill } from "./LedPill";
+import { LedModal } from "./LedModal";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
+  const { led, setColor, applyPreset, setBrightness, toggle } = useLed();
+  const [ledOpen, setLedOpen] = useState(false);
   // No sample numbers on the connected display, including during outages.
   const empty = publicRizeMetrics([], workshopDate(new Date()));
   const metrics = rize.metrics;
@@ -37,13 +42,16 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
                 <ProgressTile label="Month" value={metrics?.monthHours} goal={MONTH_TARGET_H} />
               </div>
             </div>
-            <div className="flex flex-col items-center justify-center px-6 py-2.5 text-center">
-              <div className="font-mono text-4xl font-extrabold leading-none">{p.time}</div>
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">{p.date}<AccountButton /></div>
-              <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
-                <IndicatorLight className="h-2 w-2" />
-                {STATUS_LABEL[p.status]}{p.status === "break" && p.breakInfo ? ` · ${BREAK_LABEL[p.breakInfo.kind]}` : ""} · <span className="text-foreground">{p.timer}</span>
+            <div className="flex items-center justify-between gap-3 px-5 py-2.5">
+              <div className="flex flex-1 flex-col items-center justify-center text-center">
+                <div className="font-mono text-4xl font-extrabold leading-none">{p.time}</div>
+                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">{p.date}<AccountButton /></div>
+                <div className="mt-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.3em] text-primary">
+                  <IndicatorLight className="h-2 w-2" />
+                  {STATUS_LABEL[p.status]}{p.status === "break" && p.breakInfo ? ` · ${BREAK_LABEL[p.breakInfo.kind]}` : ""} · <span className="text-foreground">{p.timer}</span>
+                </div>
               </div>
+              <LedPill led={led} status={p.status} onClick={() => setLedOpen(true)} />
             </div>
           </div>
 
@@ -80,6 +88,17 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
     {p.picking && <BreakPicker onPick={p.startBreak} onCancel={p.cancelBreakPicker} />}
     {p.status === "break" && p.breakInfo && !p.picking && (
       <BreakOverlay kind={p.breakInfo.kind} startedAt={p.breakInfo.startedAt} now={Math.max(p.nowMs, p.breakInfo.startedAt)} onResume={() => p.setStatus("in")} onClockOut={() => p.setStatus("out")} />
+    )}
+    {ledOpen && (
+      <LedModal
+        led={led}
+        status={p.status}
+        onColor={setColor}
+        onPreset={applyPreset}
+        onBrightness={setBrightness}
+        onToggle={toggle}
+        onClose={() => setLedOpen(false)}
+      />
     )}
     </div>
   );

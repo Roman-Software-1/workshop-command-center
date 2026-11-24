@@ -20,13 +20,15 @@ export function Frame({ status, variant, children }: { status: WorkStatus; varia
       >
         {children}
         <StatusBurst status={status} frosted={variant === "a"} />
-        <nav className={`absolute top-2 z-10 flex gap-1 rounded-full bg-muted/80 p-1 text-xs ${variant === "a" ? "right-[96px]" : "right-3"}`}>
-          {VARIANTS.map((v) => (
-            <Link key={v.to} to={v.to} className="rounded-full px-3 py-1 text-muted-foreground" activeProps={{ className: "rounded-full px-3 py-1 bg-primary text-primary-foreground" }}>
-              {v.label}
-            </Link>
-          ))}
-        </nav>
+        {variant !== "a" && (
+          <nav className="absolute right-3 top-2 z-10 flex gap-1 rounded-full bg-muted/80 p-1 text-xs">
+            {VARIANTS.map((v) => (
+              <Link key={v.to} to={v.to} className="rounded-full px-3 py-1 text-muted-foreground" activeProps={{ className: "rounded-full px-3 py-1 bg-primary text-primary-foreground" }}>
+                {v.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </div>
   );
