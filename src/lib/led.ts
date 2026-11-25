@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import type { WorkStatus } from "./panel-data";
 
+export type LedEffect = "solid" | "breathe" | "rainbow" | "chase" | "fire" | "party";
+
 export type LedState = {
   on: boolean;
   hue: number;
   sat: number;
   brightness: number;
+  effect: LedEffect;
+  speed: number;
   preset: string | null;
 };
 
@@ -14,26 +18,43 @@ export type LedPreset = {
   label: string;
   hue: number;
   sat: number;
+  brightness: number;
+  effect: LedEffect;
+  speed: number;
+  swatch?: string;
 };
 
 export const LED_STORAGE_KEY = "workshop-bar-led";
+
+export const LED_EFFECTS: readonly { id: LedEffect; label: string }[] = [
+  { id: "solid", label: "Solid" },
+  { id: "breathe", label: "Breathe" },
+  { id: "rainbow", label: "Rainbow" },
+  { id: "chase", label: "Chase" },
+  { id: "fire", label: "Fire" },
+  { id: "party", label: "Party" },
+];
+
+const EFFECT_IDS = new Set<string>(LED_EFFECTS.map((e) => e.id));
 
 export const DEFAULT_LED: LedState = {
   on: true,
   hue: 38,
   sat: 45,
   brightness: 80,
-  preset: "warm",
+  effect: "solid",
+  speed: 50,
+  preset: "workshop",
 };
 
 export const LED_PRESETS: readonly LedPreset[] = [
-  { id: "warm", label: "Warm white", hue: 38, sat: 45 },
-  { id: "cool", label: "Cool white", hue: 205, sat: 25 },
-  { id: "amber", label: "Amber", hue: 32, sat: 95 },
-  { id: "red", label: "Red", hue: 4, sat: 90 },
-  { id: "green", label: "Green", hue: 142, sat: 80 },
-  { id: "blue", label: "Blue", hue: 215, sat: 90 },
-  { id: "purple", label: "Purple", hue: 278, sat: 82 },
+  { id: "workshop", label: "Workshop", hue: 38, sat: 40, brightness: 85, effect: "solid", speed: 50 },
+  { id: "sunset", label: "Sunset", hue: 24, sat: 95, brightness: 75, effect: "breathe", speed: 35, swatch: "linear-gradient(135deg, hsl(14 95% 55%), hsl(42 95% 55%))" },
+  { id: "fireplace", label: "Fireplace", hue: 18, sat: 95, brightness: 70, effect: "fire", speed: 60, swatch: "linear-gradient(135deg, hsl(4 92% 48%), hsl(38 98% 55%))" },
+  { id: "ocean", label: "Ocean", hue: 200, sat: 88, brightness: 75, effect: "breathe", speed: 30, swatch: "linear-gradient(135deg, hsl(185 90% 50%), hsl(225 90% 55%))" },
+  { id: "cyberpunk", label: "Cyberpunk", hue: 295, sat: 90, brightness: 90, effect: "chase", speed: 65, swatch: "linear-gradient(135deg, hsl(310 95% 58%), hsl(185 95% 52%))" },
+  { id: "rainbow", label: "Rainbow", hue: 0, sat: 95, brightness: 85, effect: "rainbow", speed: 45, swatch: "conic-gradient(hsl(0 95% 55%), hsl(90 95% 55%), hsl(180 95% 55%), hsl(270 95% 55%), hsl(360 95% 55%))" },
+  { id: "party", label: "Party", hue: 330, sat: 95, brightness: 100, effect: "party", speed: 80, swatch: "linear-gradient(135deg, hsl(330 95% 55%), hsl(55 95% 55%), hsl(190 95% 55%))" },
 ];
 
 const STATUS_HS: Record<WorkStatus, { hue: number; sat: number }> = {
@@ -43,6 +64,8 @@ const STATUS_HS: Record<WorkStatus, { hue: number; sat: number }> = {
 };
 
 export const clampBrightness = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
+export const clampSpeed = (v: number) => Math.max(1, Math.min(100, Math.round(v)));
+export const effectDurationMs = (speed: number) => Math.round(4200 - (clampSpeed(speed) / 100) * 3600);
 
 export function resolveLedHS(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
   if (state.preset === "status") return STATUS_HS[status];
@@ -68,6 +91,8 @@ export function useLed() {
           hue: raw.hue,
           sat: raw.sat,
           brightness: clampBrightness(typeof raw.brightness === "number" ? raw.brightness : DEFAULT_LED.brightness),
+          effect: typeof raw.effect === "string" && EFFECT_IDS.has(raw.effect) ? (raw.effect as LedEffect) : DEFAULT_LED.effect,
+          speed: clampSpeed(typeof raw.speed === "number" ? raw.speed : DEFAULT_LED.speed),
           preset: typeof raw.preset === "string" ? raw.preset : null,
         });
       }
@@ -87,17 +112,23 @@ export function useLed() {
 
   const applyPreset = (id: string) => {
     if (id === "status") {
-      setLed((s) => ({ ...s, on: true, preset: "status" }));
+      setLed((s) => ({ ...s, on: true, effect: "solid", preset: "status" }));
       return;
     }
     const p = LED_PRESETS.find((x) => x.id === id);
-    if (p) setLed((s) => ({ ...s, on: true, hue: p.hue, sat: p.sat, preset: p.id }));
+    if (p) setLed((s) => ({ ...s, on: true, hue: p.hue, sat: p.sat, brightness: p.brightness, effect: p.effect, speed: p.speed, preset: p.id }));
   };
 
   const setBrightness = (v: number) =>
     setLed((s) => ({ ...s, brightness: clampBrightness(v) }));
 
+  const setEffect = (effect: LedEffect) =>
+    setLed((s) => ({ ...s, on: true, effect, preset: null }));
+
+  const setSpeed = (v: number) =>
+    setLed((s) => ({ ...s, speed: clampSpeed(v) }));
+
   const toggle = () => setLed((s) => ({ ...s, on: !s.on }));
 
-  return { led, setColor, applyPreset, setBrightness, toggle };
+  return { led, setColor, applyPreset, setBrightness, setEffect, setSpeed, toggle };
 }

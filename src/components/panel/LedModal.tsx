@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
-import { Power, Sun, X } from "lucide-react";
+import { Gauge, Power, Sun, X } from "lucide-react";
 import type { WorkStatus } from "@/lib/panel-data";
-import { LED_PRESETS, ledCss, resolveLedHS, type LedState } from "@/lib/led";
+import { effectDurationMs, LED_EFFECTS, LED_PRESETS, ledCss, resolveLedHS, type LedEffect, type LedState } from "@/lib/led";
 import { MUSIC_MODAL_IDLE_MS } from "@/lib/music-modal";
 
 type LedModalProps = {
@@ -10,11 +10,13 @@ type LedModalProps = {
   onColor: (hue: number, sat: number) => void;
   onPreset: (id: string) => void;
   onBrightness: (v: number) => void;
+  onEffect: (e: LedEffect) => void;
+  onSpeed: (v: number) => void;
   onToggle: () => void;
   onClose: () => void;
 };
 
-export function LedModal({ led, status, onColor, onPreset, onBrightness, onToggle, onClose }: LedModalProps) {
+export function LedModal({ led, status, onColor, onPreset, onBrightness, onEffect, onSpeed, onToggle, onClose }: LedModalProps) {
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetIdle = useCallback(() => {
     if (idleRef.current) clearTimeout(idleRef.current);
@@ -34,34 +36,39 @@ export function LedModal({ led, status, onColor, onPreset, onBrightness, onToggl
   const color = ledCss(led, status);
   const active = led.on && led.brightness > 0;
   const { hue, sat } = resolveLedHS(led, status);
+  const dur = `${effectDurationMs(led.speed)}ms`;
+  const effectLabel = LED_EFFECTS.find((e) => e.id === led.effect)?.label ?? "Solid";
+  const animated = led.effect !== "solid";
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Bar counter LEDs"
-      className="music-scrim absolute inset-0 z-30 flex items-center justify-center p-4"
+      className="music-scrim fixed inset-0 z-40 flex items-center justify-center p-4"
       onClick={onClose}
       onPointerDown={resetIdle}
     >
       <div
-        className="music-card relative flex w-[680px] flex-col gap-5 rounded-2xl border border-border bg-card/95 p-6 shadow-2xl"
+        className="music-card relative flex w-[760px] flex-col gap-4 rounded-2xl border border-border bg-card/95 p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header + live strip preview */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="font-mono text-sm font-bold uppercase tracking-[0.25em] text-foreground">Bar counter LEDs</span>
-            <span className="font-mono text-xs text-muted-foreground">{led.on ? `${led.brightness}%` : "Off"}</span>
+            <span className="font-mono text-xs text-muted-foreground">{led.on ? `${led.brightness}% · ${effectLabel}` : "Off"}</span>
           </div>
           <div
             aria-hidden="true"
-            className="h-3 flex-1 rounded-full border border-border transition-all"
+            data-on={active}
+            data-effect={led.effect}
+            className="led-strip h-3.5 flex-1 rounded-full border border-border transition-opacity"
             style={{
-              background: active ? color : "var(--muted)",
+              "--led": color,
+              "--led-dur": dur,
               opacity: active ? 0.35 + (led.brightness / 100) * 0.65 : 0.4,
-              boxShadow: active ? `0 0 18px ${color}` : "none",
-            }}
+            } as CSSProperties}
           />
           <button
             type="button"
@@ -73,60 +80,98 @@ export function LedModal({ led, status, onColor, onPreset, onBrightness, onToggl
           </button>
         </div>
 
-        {/* Body: wheel + presets */}
-        <div className="grid grid-cols-[210px_1fr] items-center gap-6">
+        {/* Body: wheel + scenes + effects */}
+        <div className="grid grid-cols-[200px_1fr] items-center gap-5">
           <ColorWheel hue={hue} sat={sat} onPick={(h, s) => { resetIdle(); onColor(h, s); }} />
 
           <div className="flex flex-col gap-3">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Presets</div>
-            <div className="grid grid-cols-4 gap-2.5">
-              {LED_PRESETS.map((p) => {
-                const selected = led.on && led.preset === p.id;
-                const swatch = ledCss({ hue: p.hue, sat: p.sat, preset: p.id }, status);
-                return (
+            <div>
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Scenes</div>
+              <div className="grid grid-cols-4 gap-2">
+                {LED_PRESETS.map((p) => {
+                  const selected = led.on && led.preset === p.id;
+                  const swatch = p.swatch ?? ledCss({ hue: p.hue, sat: p.sat, preset: p.id }, status);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { resetIdle(); onPreset(p.id); }}
+                      className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2 font-mono text-[11px] transition-all active:scale-95 ${selected ? "border-foreground bg-secondary text-secondary-foreground" : "border-border bg-background/60 text-muted-foreground"}`}
+                    >
+                      <span className="h-6 w-6 rounded-full border border-border/60" style={{ background: swatch }} />
+                      <span className="truncate">{p.label}</span>
+                    </button>
+                  );
+                })}
+                {(() => {
+                  const selected = led.on && led.preset === "status";
+                  const swatch = ledCss({ hue: 0, sat: 0, preset: "status" }, status);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => { resetIdle(); onPreset("status"); }}
+                      className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2 font-mono text-[11px] transition-all active:scale-95 ${selected ? "border-foreground bg-secondary text-secondary-foreground" : "border-border bg-background/60 text-muted-foreground"}`}
+                    >
+                      <span className="h-6 w-6 rounded-full border border-border/60" style={{ background: swatch }} />
+                      <span className="truncate">Work status</span>
+                    </button>
+                  );
+                })()}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Effects</div>
+              <div className="grid grid-cols-6 gap-1.5">
+                {LED_EFFECTS.map((e) => {
+                  const selected = led.on && led.effect === e.id;
+                  return (
                   <button
-                    key={p.id}
+                    key={e.id}
                     type="button"
-                    onClick={() => { resetIdle(); onPreset(p.id); }}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 font-mono text-[11px] transition-all active:scale-95 ${selected ? "border-foreground bg-secondary text-secondary-foreground" : "border-border bg-background/60 text-muted-foreground"}`}
+                    onClick={() => { resetIdle(); onEffect(e.id); }}
+                    className={`rounded-lg border px-2 py-2 font-mono text-[11px] font-medium transition-all active:scale-95 ${selected ? "border-foreground bg-secondary text-secondary-foreground" : "border-border bg-background/60 text-muted-foreground"}`}
                   >
-                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ background: swatch, boxShadow: selected ? `0 0 12px ${swatch}` : undefined }} />
-                    <span className="truncate">{p.label}</span>
+                    {e.label}
                   </button>
-                );
-              })}
-              {(() => {
-                const selected = led.on && led.preset === "status";
-                const swatch = ledCss({ hue: 0, sat: 0, preset: "status" }, status);
-                return (
-                  <button
-                    type="button"
-                    onClick={() => { resetIdle(); onPreset("status"); }}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 font-mono text-[11px] transition-all active:scale-95 ${selected ? "border-foreground bg-secondary text-secondary-foreground" : "border-border bg-background/60 text-muted-foreground"}`}
-                  >
-                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ background: swatch, boxShadow: selected ? `0 0 12px ${swatch}` : undefined }} />
-                    <span className="truncate">Work status</span>
-                  </button>
-                );
-              })()}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer: brightness slider + On/Off */}
+        {/* Footer: brightness + speed + On/Off */}
         <div className="flex items-center gap-4 border-t border-border pt-4">
-          <Sun className="h-5 w-5 shrink-0 text-muted-foreground" />
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={led.brightness}
-            aria-label="Brightness"
-            onChange={(e) => { resetIdle(); onBrightness(Number(e.target.value)); }}
-            style={{ "--led": color } as CSSProperties}
-            className="led-slider flex-1"
-          />
-          <span className="w-11 text-right font-mono text-sm font-bold">{led.brightness}%</span>
+          <div className="flex flex-1 items-center gap-2.5">
+            <Sun className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={led.brightness}
+              aria-label="Brightness"
+              onChange={(e) => { resetIdle(); onBrightness(Number(e.target.value)); }}
+              style={{ "--led": color } as CSSProperties}
+              className="led-slider flex-1"
+            />
+            <span className="w-10 text-right font-mono text-xs font-bold">{led.brightness}%</span>
+          </div>
+          <div className={`flex flex-1 items-center gap-2.5 transition-opacity ${animated ? "opacity-100" : "opacity-40"}`}>
+            <Gauge className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input
+              type="range"
+              min={1}
+              max={100}
+              value={led.speed}
+              disabled={!animated}
+              aria-label="Effect speed"
+              onChange={(e) => { resetIdle(); onSpeed(Number(e.target.value)); }}
+              style={{ "--led": color } as CSSProperties}
+              className="led-slider flex-1"
+            />
+            <span className="w-10 text-right font-mono text-xs font-bold">{led.speed}%</span>
+          </div>
           <button
             type="button"
             onClick={() => { resetIdle(); onToggle(); }}

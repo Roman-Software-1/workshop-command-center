@@ -14,7 +14,7 @@ import { LedModal } from "./LedModal";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
-  const { led, setColor, applyPreset, setBrightness, toggle } = useLed();
+  const { led, setColor, applyPreset, setBrightness, setEffect, setSpeed, toggle } = useLed();
   const [ledOpen, setLedOpen] = useState(false);
   // No sample numbers on the connected display, including during outages.
   const empty = publicRizeMetrics([], workshopDate(new Date()));
@@ -96,6 +96,8 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
         onColor={setColor}
         onPreset={applyPreset}
         onBrightness={setBrightness}
+        onEffect={setEffect}
+        onSpeed={setSpeed}
         onToggle={toggle}
         onClose={() => setLedOpen(false)}
       />

@@ -429,7 +429,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span, .led-pill-glow { animation: none; }
+  .status-frame::before, .status-burst, .status-burst-ring, .status-burst-text, .spotify-eq > span, .led-pill-glow, .led-strip { animation: none; }
 }
 
 /* Music pop-up (design A) */
@@ -454,11 +454,57 @@
 }
 .led-pill[data-on="true"] .led-pill-glow {
   background: var(--led);
-  animation: led-breathe 3s ease-in-out infinite alternate;
+  animation: led-breathe var(--led-dur, 3s) ease-in-out infinite alternate;
+}
+.led-pill[data-on="true"][data-effect="solid"] .led-pill-glow { animation: none; }
+.led-pill[data-on="true"][data-effect="rainbow"] .led-pill-glow,
+.led-strip[data-on="true"][data-effect="rainbow"] {
+  background: linear-gradient(90deg, hsl(0 95% 55%), hsl(60 95% 55%), hsl(120 95% 55%), hsl(180 95% 55%), hsl(240 95% 55%), hsl(300 95% 55%), hsl(360 95% 55%));
+  background-size: 250% 250%;
+  animation: led-flow var(--led-dur, 2.4s) linear infinite;
+}
+.led-pill[data-on="true"][data-effect="chase"] .led-pill-glow,
+.led-strip[data-on="true"][data-effect="chase"] {
+  background: linear-gradient(90deg, transparent 0%, var(--led) 45%, white 50%, var(--led) 55%, transparent 100%);
+  background-size: 220% 220%;
+  animation: led-flow var(--led-dur, 1.8s) linear infinite;
+}
+.led-pill[data-on="true"][data-effect="fire"] .led-pill-glow,
+.led-strip[data-on="true"][data-effect="fire"] {
+  background: linear-gradient(90deg, hsl(4 92% 45%), hsl(24 98% 54%), hsl(44 98% 58%), hsl(16 95% 48%));
+  background-size: 220% 220%;
+  animation: led-fire var(--led-dur, 1.6s) ease-in-out infinite alternate;
+}
+.led-pill[data-on="true"][data-effect="party"] .led-pill-glow,
+.led-strip[data-on="true"][data-effect="party"] {
+  animation: led-party var(--led-dur, 1.2s) steps(1, end) infinite;
+}
+.led-strip[data-on="false"] { background: var(--muted); }
+.led-strip[data-on="true"] {
+  background: var(--led);
+  box-shadow: 0 0 18px var(--led);
+}
+.led-strip[data-on="true"][data-effect="breathe"] {
+  animation: led-breathe var(--led-dur, 2.6s) ease-in-out infinite alternate;
 }
 @keyframes led-breathe {
-  from { opacity: 0.55; }
+  from { opacity: 0.4; }
   to { opacity: 1; }
+}
+@keyframes led-flow {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+@keyframes led-fire {
+  0% { background-position: 0% 50%; opacity: 0.75; }
+  50% { background-position: 100% 50%; opacity: 1; }
+  100% { background-position: 40% 50%; opacity: 0.82; }
+}
+@keyframes led-party {
+  0% { background: hsl(330 95% 58%); box-shadow: 0 0 18px hsl(330 95% 58%); }
+  25% { background: hsl(190 95% 52%); box-shadow: 0 0 18px hsl(190 95% 52%); }
+  50% { background: hsl(50 98% 55%); box-shadow: 0 0 18px hsl(50 98% 55%); }
+  75% { background: hsl(135 90% 52%); box-shadow: 0 0 18px hsl(135 90% 52%); }
 }
 .led-slider {
   -webkit-appearance: none;
