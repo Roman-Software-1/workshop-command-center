@@ -22,9 +22,11 @@ export type LedPreset = {
   effect: LedEffect;
   speed: number;
   swatch?: string;
+  custom?: boolean;
 };
 
 export const LED_STORAGE_KEY = "workshop-bar-led";
+export const LED_PRESETS_STORAGE_KEY = "workshop-bar-led-presets";
 
 export const LED_EFFECTS: readonly { id: LedEffect; label: string }[] = [
   { id: "solid", label: "Solid" },
@@ -67,6 +69,32 @@ export const clampBrightness = (v: number) => Math.max(0, Math.min(100, Math.rou
 export const clampSpeed = (v: number) => Math.max(1, Math.min(100, Math.round(v)));
 export const effectDurationMs = (speed: number) => Math.round(4200 - (clampSpeed(speed) / 100) * 3600);
 
+export function isPresetModified(led: LedState, preset: LedPreset | undefined): boolean {
+  if (!preset) return false;
+  return (
+    Math.round(led.hue) !== Math.round(preset.hue) ||
+    Math.round(led.sat) !== Math.round(preset.sat) ||
+    led.brightness !== preset.brightness ||
+    led.effect !== preset.effect ||
+    led.speed !== preset.speed
+  );
+}
+
+export function buildCustomPreset(name: string, led: LedState): LedPreset | null {
+  const label = name.trim().slice(0, 24);
+  if (!label) return null;
+  return {
+    id: `custom-${Date.now()}`,
+    label,
+    hue: Math.round(led.hue),
+    sat: Math.round(led.sat),
+    brightness: clampBrightness(led.brightness),
+    effect: led.effect,
+    speed: clampSpeed(led.speed),
+    custom: true,
+  };
+}
+
 export function resolveLedHS(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
   if (state.preset === "status") return STATUS_HS[status];
   return { hue: ((Math.round(state.hue) % 360) + 360) % 360, sat: Math.max(0, Math.min(100, Math.round(state.sat))) };
@@ -80,6 +108,7 @@ export function ledCss(state: Pick<LedState, "hue" | "sat" | "preset">, status: 
 
 export function useLed() {
   const [led, setLed] = useState<LedState>(DEFAULT_LED);
+  const [presets, setPresets] = useState<LedPreset[]>(() => [...LED_PRESETS]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -96,6 +125,10 @@ export function useLed() {
           preset: typeof raw.preset === "string" ? raw.preset : null,
         });
       }
+      const savedPresets = JSON.parse(localStorage.getItem(LED_PRESETS_STORAGE_KEY) ?? "null");
+      if (Array.isArray(savedPresets) && savedPresets.length > 0) {
+        setPresets(savedPresets);
+      }
     } catch { /* ignore */ }
     setLoaded(true);
   }, []);
@@ -104,18 +137,19 @@ export function useLed() {
     if (!loaded) return;
     try {
       localStorage.setItem(LED_STORAGE_KEY, JSON.stringify(led));
+      localStorage.setItem(LED_PRESETS_STORAGE_KEY, JSON.stringify(presets));
     } catch { /* ignore */ }
-  }, [led, loaded]);
+  }, [led, presets, loaded]);
 
   const setColor = (hue: number, sat: number) =>
-    setLed((s) => ({ ...s, on: true, hue, sat, preset: null }));
+    setLed((s) => ({ ...s, on: true, hue, sat, preset: s.preset === "status" ? null : s.preset }));
 
   const applyPreset = (id: string) => {
     if (id === "status") {
       setLed((s) => ({ ...s, on: true, effect: "solid", preset: "status" }));
       return;
     }
-    const p = LED_PRESETS.find((x) => x.id === id);
+    const p = presets.find((x) => x.id === id);
     if (p) setLed((s) => ({ ...s, on: true, hue: p.hue, sat: p.sat, brightness: p.brightness, effect: p.effect, speed: p.speed, preset: p.id }));
   };
 
@@ -123,12 +157,35 @@ export function useLed() {
     setLed((s) => ({ ...s, brightness: clampBrightness(v) }));
 
   const setEffect = (effect: LedEffect) =>
-    setLed((s) => ({ ...s, on: true, effect, preset: null }));
+    setLed((s) => ({ ...s, on: true, effect, preset: s.preset === "status" ? null : s.preset }));
 
   const setSpeed = (v: number) =>
     setLed((s) => ({ ...s, speed: clampSpeed(v) }));
 
+  const savePreset = (name: string) => {
+    const created = buildCustomPreset(name, led);
+    if (!created) return false;
+    setPresets((list) => [...list, created]);
+    setLed((s) => ({ ...s, preset: created.id }));
+    return true;
+  };
+
+  const updatePreset = (id: string) => {
+    setPresets((list) =>
+      list.map((p) => {
+        if (p.id !== id) return p;
+        const { swatch: _, ...rest } = p;
+        return { ...rest, hue: Math.round(led.hue), sat: Math.round(led.sat), brightness: led.brightness, effect: led.effect, speed: led.speed };
+      }),
+    );
+  };
+
+  const deletePreset = (id: string) => {
+    setPresets((list) => list.filter((p) => p.id !== id));
+    setLed((s) => (s.preset === id ? { ...s, preset: null } : s));
+  };
+
   const toggle = () => setLed((s) => ({ ...s, on: !s.on }));
 
-  return { led, setColor, applyPreset, setBrightness, setEffect, setSpeed, toggle };
+  return { led, presets, setColor, applyPreset, setBrightness, setEffect, setSpeed, savePreset, updatePreset, deletePreset, toggle };
 }

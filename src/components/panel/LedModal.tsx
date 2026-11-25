@@ -1,22 +1,28 @@
-import { useCallback, useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
-import { Gauge, Power, Sun, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { Check, Gauge, Plus, Power, Save, Sun, Trash2, X } from "lucide-react";
 import type { WorkStatus } from "@/lib/panel-data";
-import { effectDurationMs, LED_EFFECTS, LED_PRESETS, ledCss, resolveLedHS, type LedEffect, type LedState } from "@/lib/led";
+import { effectDurationMs, isPresetModified, LED_EFFECTS, ledCss, resolveLedHS, type LedEffect, type LedPreset, type LedState } from "@/lib/led";
 import { MUSIC_MODAL_IDLE_MS } from "@/lib/music-modal";
 
 type LedModalProps = {
   led: LedState;
+  presets: readonly LedPreset[];
   status: WorkStatus;
   onColor: (hue: number, sat: number) => void;
   onPreset: (id: string) => void;
   onBrightness: (v: number) => void;
   onEffect: (e: LedEffect) => void;
   onSpeed: (v: number) => void;
+  onSavePreset: (name: string) => boolean;
+  onUpdatePreset: (id: string) => void;
+  onDeletePreset: (id: string) => void;
   onToggle: () => void;
   onClose: () => void;
 };
 
-export function LedModal({ led, status, onColor, onPreset, onBrightness, onEffect, onSpeed, onToggle, onClose }: LedModalProps) {
+export function LedModal({ led, presets, status, onColor, onPreset, onBrightness, onEffect, onSpeed, onSavePreset, onUpdatePreset, onDeletePreset, onToggle, onClose }: LedModalProps) {
+  const [saving, setSaving] = useState(false);
+  const [draftName, setDraftName] = useState("");
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetIdle = useCallback(() => {
     if (idleRef.current) clearTimeout(idleRef.current);
@@ -39,6 +45,15 @@ export function LedModal({ led, status, onColor, onPreset, onBrightness, onEffec
   const dur = `${effectDurationMs(led.speed)}ms`;
   const effectLabel = LED_EFFECTS.find((e) => e.id === led.effect)?.label ?? "Solid";
   const animated = led.effect !== "solid";
+  const selectedPreset = presets.find((p) => p.id === led.preset);
+  const modified = isPresetModified(led, selectedPreset);
+
+  const submitSave = () => {
+    if (onSavePreset(draftName)) {
+      setDraftName("");
+      setSaving(false);
+    }
+  };
 
   return (
     <div
@@ -86,9 +101,66 @@ export function LedModal({ led, status, onColor, onPreset, onBrightness, onEffec
 
           <div className="flex flex-col gap-3">
             <div>
-              <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Scenes</div>
-              <div className="grid grid-cols-4 gap-2">
-                {LED_PRESETS.map((p) => {
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Scenes</span>
+                <div className="flex items-center gap-1.5">
+                  {selectedPreset && modified && (
+                    <button
+                      type="button"
+                      onClick={() => { resetIdle(); onUpdatePreset(selectedPreset.id); }}
+                      className="flex items-center gap-1 rounded-md border border-foreground bg-secondary px-2 py-1 font-mono text-[10px] font-bold uppercase text-secondary-foreground active:scale-95"
+                    >
+                      <Save className="h-3 w-3" />
+                      Update {selectedPreset.label}
+                    </button>
+                  )}
+                  {selectedPreset?.custom && (
+                    <button
+                      type="button"
+                      onClick={() => { resetIdle(); onDeletePreset(selectedPreset.id); }}
+                      aria-label={`Delete ${selectedPreset.label}`}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-border bg-background/60 text-muted-foreground hover:text-destructive active:scale-95"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { resetIdle(); setSaving((v) => !v); }}
+                    className="flex items-center gap-1 rounded-md border border-border bg-background/60 px-2 py-1 font-mono text-[10px] uppercase text-foreground active:scale-95"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Save
+                  </button>
+                </div>
+              </div>
+              {saving && (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); resetIdle(); submitSave(); }}
+                  className="mb-2 flex items-center gap-1.5"
+                >
+                  <input
+                    type="text"
+                    value={draftName}
+                    onChange={(e) => { resetIdle(); setDraftName(e.target.value); }}
+                    placeholder="Preset name..."
+                    maxLength={24}
+                    autoFocus
+                    className="h-8 flex-1 rounded-lg border border-border bg-background px-2.5 font-mono text-xs text-foreground outline-none focus:border-foreground"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!draftName.trim()}
+                    aria-label="Confirm save preset"
+                    className="flex h-8 items-center gap-1 rounded-lg border border-foreground bg-foreground px-2.5 font-mono text-[11px] font-bold uppercase text-background disabled:opacity-40"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Save
+                  </button>
+                </form>
+              )}
+              <div className="grid max-h-[140px] grid-cols-4 gap-2 overflow-y-auto pr-0.5">
+                {presets.map((p) => {
                   const selected = led.on && led.preset === p.id;
                   const swatch = p.swatch ?? ledCss({ hue: p.hue, sat: p.sat, preset: p.id }, status);
                   return (
