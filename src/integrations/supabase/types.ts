@@ -7,13 +7,159 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.18"
-  }
   public: {
     Tables: {
+      led_desired: {
+        Row: {
+          device_id: string
+          request_id: string | null
+          revision: number
+          schema_version: number
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          request_id?: string | null
+          revision?: number
+          schema_version?: number
+          state: Json
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          request_id?: string | null
+          revision?: number
+          schema_version?: number
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "led_desired_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "led_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      led_devices: {
+        Row: {
+          created_at: string
+          direction: number
+          group_count: number
+          group_count_provisional: boolean
+          id: string
+          name: string
+          token_hash: string | null
+          token_prefix: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          direction?: number
+          group_count?: number
+          group_count_provisional?: boolean
+          id: string
+          name: string
+          token_hash?: string | null
+          token_prefix?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          direction?: number
+          group_count?: number
+          group_count_provisional?: boolean
+          id?: string
+          name?: string
+          token_hash?: string | null
+          token_prefix?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      led_presets: {
+        Row: {
+          created_at: string
+          custom: boolean
+          id: string
+          label: string
+          sort_order: number
+          state: Json
+          swatch: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom?: boolean
+          id: string
+          label: string
+          sort_order?: number
+          state: Json
+          swatch?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom?: boolean
+          id?: string
+          label?: string
+          sort_order?: number
+          state?: Json
+          swatch?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      led_reported: {
+        Row: {
+          applied_revision: number
+          applied_state: Json | null
+          boot_id: string | null
+          capabilities: Json | null
+          controller_version: string | null
+          device_id: string
+          heartbeat_at: string | null
+          last_error: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applied_revision?: number
+          applied_state?: Json | null
+          boot_id?: string | null
+          capabilities?: Json | null
+          controller_version?: string | null
+          device_id: string
+          heartbeat_at?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applied_revision?: number
+          applied_state?: Json | null
+          boot_id?: string | null
+          capabilities?: Json | null
+          controller_version?: string | null
+          device_id?: string
+          heartbeat_at?: string | null
+          last_error?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "led_reported_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "led_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string
@@ -70,7 +216,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_led_desired: {
+        Args: {
+          p_base_revision: number
+          p_device_id: string
+          p_force?: boolean
+          p_request_id: string
+          p_state: Json
+        }
+        Returns: {
+          outcome: string
+          revision: number
+          state: Json
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -203,3 +363,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

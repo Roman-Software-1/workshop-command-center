@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BRouteImport } from './routes/b'
 import { Route as CRouteImport } from './routes/c'
 import { Route as ApiPublicSpotifyCallbackRouteImport } from './routes/api/public/spotify/callback'
+import { Route as ApiPublicLedDevicePollRouteImport } from './routes/api/public/led/device/poll'
+import { Route as ApiPublicLedDeviceReportRouteImport } from './routes/api/public/led/device/report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,6 +49,17 @@ const ApiPublicSpotifyCallbackRoute =
     path: '/api/public/spotify/callback',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLedDevicePollRoute = ApiPublicLedDevicePollRouteImport.update({
+  id: '/api/public/led/device/poll',
+  path: '/api/public/led/device/poll',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLedDeviceReportRoute =
+  ApiPublicLedDeviceReportRouteImport.update({
+    id: '/api/public/led/device/report',
+    path: '/api/public/led/device/report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -55,6 +68,8 @@ export interface FileRoutesByFullPath {
   '/b': typeof BRoute
   '/c': typeof CRoute
   '/api/public/spotify/callback': typeof ApiPublicSpotifyCallbackRoute
+  '/api/public/led/device/poll': typeof ApiPublicLedDevicePollRoute
+  '/api/public/led/device/report': typeof ApiPublicLedDeviceReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -63,6 +78,8 @@ export interface FileRoutesByTo {
   '/b': typeof BRoute
   '/c': typeof CRoute
   '/api/public/spotify/callback': typeof ApiPublicSpotifyCallbackRoute
+  '/api/public/led/device/poll': typeof ApiPublicLedDevicePollRoute
+  '/api/public/led/device/report': typeof ApiPublicLedDeviceReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,12 +89,30 @@ export interface FileRoutesById {
   '/b': typeof BRoute
   '/c': typeof CRoute
   '/api/public/spotify/callback': typeof ApiPublicSpotifyCallbackRoute
+  '/api/public/led/device/poll': typeof ApiPublicLedDevicePollRoute
+  '/api/public/led/device/report': typeof ApiPublicLedDeviceReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/a' | '/auth' | '/b' | '/c' | '/api/public/spotify/callback'
+  fullPaths:
+    | '/'
+    | '/a'
+    | '/auth'
+    | '/b'
+    | '/c'
+    | '/api/public/spotify/callback'
+    | '/api/public/led/device/poll'
+    | '/api/public/led/device/report'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/a' | '/auth' | '/b' | '/c' | '/api/public/spotify/callback'
+  to:
+    | '/'
+    | '/a'
+    | '/auth'
+    | '/b'
+    | '/c'
+    | '/api/public/spotify/callback'
+    | '/api/public/led/device/poll'
+    | '/api/public/led/device/report'
   id:
     | '__root__'
     | '/'
@@ -86,6 +121,8 @@ export interface FileRouteTypes {
     | '/b'
     | '/c'
     | '/api/public/spotify/callback'
+    | '/api/public/led/device/poll'
+    | '/api/public/led/device/report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +132,8 @@ export interface RootRouteChildren {
   BRoute: typeof BRoute
   CRoute: typeof CRoute
   ApiPublicSpotifyCallbackRoute: typeof ApiPublicSpotifyCallbackRoute
+  ApiPublicLedDevicePollRoute: typeof ApiPublicLedDevicePollRoute
+  ApiPublicLedDeviceReportRoute: typeof ApiPublicLedDeviceReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +180,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSpotifyCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/led/device/poll': {
+      id: '/api/public/led/device/poll'
+      path: '/api/public/led/device/poll'
+      fullPath: '/api/public/led/device/poll'
+      preLoaderRoute: typeof ApiPublicLedDevicePollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/led/device/report': {
+      id: '/api/public/led/device/report'
+      path: '/api/public/led/device/report'
+      fullPath: '/api/public/led/device/report'
+      preLoaderRoute: typeof ApiPublicLedDeviceReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +204,8 @@ const rootRouteChildren: RootRouteChildren = {
   BRoute: BRoute,
   CRoute: CRoute,
   ApiPublicSpotifyCallbackRoute: ApiPublicSpotifyCallbackRoute,
+  ApiPublicLedDevicePollRoute: ApiPublicLedDevicePollRoute,
+  ApiPublicLedDeviceReportRoute: ApiPublicLedDeviceReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

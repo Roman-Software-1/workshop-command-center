@@ -14,8 +14,8 @@ import { LedModal } from "./LedModal";
 
 // A: Instrument panel — thin rules, mono numerals, gauge feel.
 export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
-  const { led, presets, setColor, applyPreset, setBrightness, setEffect, setSpeed, savePreset, updatePreset, deletePreset, toggle } = useLed();
   const [ledOpen, setLedOpen] = useState(false);
+  const ledCtl = useLed(ledOpen);
   // No sample numbers on the connected display, including during outages.
   const empty = publicRizeMetrics([], workshopDate(new Date()));
   const metrics = rize.metrics;
@@ -51,7 +51,7 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
                   {STATUS_LABEL[p.status]}{p.status === "break" && p.breakInfo ? ` · ${BREAK_LABEL[p.breakInfo.kind]}` : ""} · <span className="text-foreground">{p.timer}</span>
                 </div>
               </div>
-              <LedPill led={led} status={p.status} onClick={() => setLedOpen(true)} />
+              <LedPill led={ledCtl.led} status={p.status} onClick={() => setLedOpen(true)} />
             </div>
           </div>
 
@@ -89,23 +89,32 @@ export function VariantA({ p, rize }: { p: Panel; rize: RizeResult }) {
     {p.status === "break" && p.breakInfo && !p.picking && (
       <BreakOverlay kind={p.breakInfo.kind} startedAt={p.breakInfo.startedAt} now={Math.max(p.nowMs, p.breakInfo.startedAt)} onResume={() => p.setStatus("in")} onClockOut={() => p.setStatus("out")} />
     )}
-    {ledOpen && (
-      <LedModal
-        led={led}
-        presets={presets}
-        status={p.status}
-        onColor={setColor}
-        onPreset={applyPreset}
-        onBrightness={setBrightness}
-        onEffect={setEffect}
-        onSpeed={setSpeed}
-        onSavePreset={savePreset}
-        onUpdatePreset={updatePreset}
-        onDeletePreset={deletePreset}
-        onToggle={toggle}
-        onClose={() => setLedOpen(false)}
-      />
-    )}
+      {ledOpen && (
+        <LedModal
+          led={ledCtl.led}
+          presets={ledCtl.presets}
+          device={ledCtl.device}
+          reported={ledCtl.reported}
+          sync={ledCtl.sync}
+          browserOffline={ledCtl.browserOffline}
+          status={p.status}
+          onPatchImmediate={ledCtl.patchImmediate}
+          onPatchDebounced={ledCtl.patchDebounced}
+          onFlush={ledCtl.flushPending}
+          onTurnOff={ledCtl.turnOff}
+          onPreset={ledCtl.applyPreset}
+          onSavePreset={ledCtl.savePreset}
+          onUpdatePreset={ledCtl.updatePreset}
+          onRenamePreset={ledCtl.renamePreset}
+          onDuplicatePreset={ledCtl.duplicatePreset}
+          onDeletePreset={ledCtl.deletePreset}
+          onRotateToken={ledCtl.rotateToken}
+          onRevokeToken={ledCtl.revokeToken}
+          onSaveCalibration={ledCtl.saveCalibration}
+          onProbeCalibration={ledCtl.probeCalibration}
+          onClose={() => setLedOpen(false)}
+        />
+      )}
     </div>
   );
 }

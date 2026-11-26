@@ -15,6 +15,13 @@
       "when": 1795333681740,
       "tag": "0001_spotify_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795651701424,
+      "tag": "0002_create_led_controller_tables",
+      "breakpoints": true
     }
   ]
 }

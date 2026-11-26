@@ -1,191 +1,282 @@
-import { useEffect, useState } from "react";
-import type { WorkStatus } from "./panel-data";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import {
+  DEFAULT_LED,
+  computeSyncStatus,
+  type LedPreset,
+  type LedSnapshot,
+  type LedState,
+} from "./led-schema";
+import {
+  deleteLedPresetFn,
+  duplicateLedPresetFn,
+  getLedSnapshotFn,
+  renameLedPresetFn,
+  revokeLedTokenFn,
+  rotateLedTokenFn,
+  saveLedCalibrationFn,
+  saveLedPresetFn,
+  setLedDesiredFn,
+  updateLedPresetFn,
+} from "./led.functions";
 
-export type LedEffect = "solid" | "breathe" | "rainbow" | "chase" | "fire" | "party";
+export * from "./led-schema";
 
-export type LedState = {
-  on: boolean;
-  hue: number;
-  sat: number;
-  brightness: number;
-  effect: LedEffect;
-  speed: number;
-  preset: string | null;
-};
+export const LED_QUERY_KEY = ["led-snapshot"] as const;
+const SLIDER_DEBOUNCE_MS = 200;
 
-export type LedPreset = {
-  id: string;
-  label: string;
-  hue: number;
-  sat: number;
-  brightness: number;
-  effect: LedEffect;
-  speed: number;
-  swatch?: string;
-  custom?: boolean;
-};
-
-export const LED_STORAGE_KEY = "workshop-bar-led";
-export const LED_PRESETS_STORAGE_KEY = "workshop-bar-led-presets";
-
-export const LED_EFFECTS: readonly { id: LedEffect; label: string }[] = [
-  { id: "solid", label: "Solid" },
-  { id: "breathe", label: "Breathe" },
-  { id: "rainbow", label: "Rainbow" },
-  { id: "chase", label: "Chase" },
-  { id: "fire", label: "Fire" },
-  { id: "party", label: "Party" },
-];
-
-const EFFECT_IDS = new Set<string>(LED_EFFECTS.map((e) => e.id));
-
-export const DEFAULT_LED: LedState = {
-  on: true,
-  hue: 38,
-  sat: 45,
-  brightness: 80,
-  effect: "solid",
-  speed: 50,
-  preset: "workshop",
-};
-
-export const LED_PRESETS: readonly LedPreset[] = [
-  { id: "workshop", label: "Workshop", hue: 38, sat: 40, brightness: 85, effect: "solid", speed: 50 },
-  { id: "sunset", label: "Sunset", hue: 24, sat: 95, brightness: 75, effect: "breathe", speed: 35, swatch: "linear-gradient(135deg, hsl(14 95% 55%), hsl(42 95% 55%))" },
-  { id: "fireplace", label: "Fireplace", hue: 18, sat: 95, brightness: 70, effect: "fire", speed: 60, swatch: "linear-gradient(135deg, hsl(4 92% 48%), hsl(38 98% 55%))" },
-  { id: "ocean", label: "Ocean", hue: 200, sat: 88, brightness: 75, effect: "breathe", speed: 30, swatch: "linear-gradient(135deg, hsl(185 90% 50%), hsl(225 90% 55%))" },
-  { id: "cyberpunk", label: "Cyberpunk", hue: 295, sat: 90, brightness: 90, effect: "chase", speed: 65, swatch: "linear-gradient(135deg, hsl(310 95% 58%), hsl(185 95% 52%))" },
-  { id: "rainbow", label: "Rainbow", hue: 0, sat: 95, brightness: 85, effect: "rainbow", speed: 45, swatch: "conic-gradient(hsl(0 95% 55%), hsl(90 95% 55%), hsl(180 95% 55%), hsl(270 95% 55%), hsl(360 95% 55%))" },
-  { id: "party", label: "Party", hue: 330, sat: 95, brightness: 100, effect: "party", speed: 80, swatch: "linear-gradient(135deg, hsl(330 95% 55%), hsl(55 95% 55%), hsl(190 95% 55%))" },
-];
-
-const STATUS_HS: Record<WorkStatus, { hue: number; sat: number }> = {
-  in: { hue: 142, sat: 85 },
-  break: { hue: 32, sat: 95 },
-  out: { hue: 4, sat: 88 },
-};
-
-export const clampBrightness = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
-export const clampSpeed = (v: number) => Math.max(1, Math.min(100, Math.round(v)));
-export const effectDurationMs = (speed: number) => Math.round(4200 - (clampSpeed(speed) / 100) * 3600);
-
-export function isPresetModified(led: LedState, preset: LedPreset | undefined): boolean {
-  if (!preset) return false;
-  return (
-    Math.round(led.hue) !== Math.round(preset.hue) ||
-    Math.round(led.sat) !== Math.round(preset.sat) ||
-    led.brightness !== preset.brightness ||
-    led.effect !== preset.effect ||
-    led.speed !== preset.speed
-  );
+function makeRequestId() {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function buildCustomPreset(name: string, led: LedState): LedPreset | null {
-  const label = name.trim().slice(0, 24);
-  if (!label) return null;
-  return {
-    id: `custom-${Date.now()}`,
-    label,
-    hue: Math.round(led.hue),
-    sat: Math.round(led.sat),
-    brightness: clampBrightness(led.brightness),
-    effect: led.effect,
-    speed: clampSpeed(led.speed),
-    custom: true,
-  };
-}
+export function useLed(modalOpen = false) {
+  const queryClient = useQueryClient();
+  const getSnapshot = useServerFn(getLedSnapshotFn);
+  const setDesired = useServerFn(setLedDesiredFn);
+  const savePresetCall = useServerFn(saveLedPresetFn);
+  const updatePresetCall = useServerFn(updateLedPresetFn);
+  const renamePresetCall = useServerFn(renameLedPresetFn);
+  const duplicatePresetCall = useServerFn(duplicateLedPresetFn);
+  const deletePresetCall = useServerFn(deleteLedPresetFn);
+  const rotateTokenCall = useServerFn(rotateLedTokenFn);
+  const revokeTokenCall = useServerFn(revokeLedTokenFn);
+  const saveCalCall = useServerFn(saveLedCalibrationFn);
 
-export function resolveLedHS(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
-  if (state.preset === "status") return STATUS_HS[status];
-  return { hue: ((Math.round(state.hue) % 360) + 360) % 360, sat: Math.max(0, Math.min(100, Math.round(state.sat))) };
-}
+  const query = useQuery<LedSnapshot>({
+    queryKey: LED_QUERY_KEY,
+    queryFn: () => getSnapshot(),
+    refetchInterval: modalOpen ? 3000 : 15000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+  });
 
-export function ledCss(state: Pick<LedState, "hue" | "sat" | "preset">, status: WorkStatus) {
-  const { hue, sat } = resolveLedHS(state, status);
-  const light = Math.round(52 + ((100 - sat) / 100) * 40);
-  return `hsl(${hue} ${sat}% ${light}%)`;
-}
+  const [draft, setDraft] = useState<LedState | null>(null);
+  const [pendingSend, setPendingSend] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingStateRef = useRef<LedState | null>(null);
+  const baseRevRef = useRef<number>(1);
 
-export function useLed() {
-  const [led, setLed] = useState<LedState>(DEFAULT_LED);
-  const [presets, setPresets] = useState<LedPreset[]>(() => [...LED_PRESETS]);
-  const [loaded, setLoaded] = useState(false);
+  const serverState = query.data?.desired.state ?? DEFAULT_LED;
+  const serverRevision = query.data?.desired.revision ?? 1;
 
   useEffect(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(LED_STORAGE_KEY) ?? "null");
-      if (raw && typeof raw.on === "boolean" && typeof raw.hue === "number" && typeof raw.sat === "number") {
-        setLed({
-          on: raw.on,
-          hue: raw.hue,
-          sat: raw.sat,
-          brightness: clampBrightness(typeof raw.brightness === "number" ? raw.brightness : DEFAULT_LED.brightness),
-          effect: typeof raw.effect === "string" && EFFECT_IDS.has(raw.effect) ? (raw.effect as LedEffect) : DEFAULT_LED.effect,
-          speed: clampSpeed(typeof raw.speed === "number" ? raw.speed : DEFAULT_LED.speed),
-          preset: typeof raw.preset === "string" ? raw.preset : null,
-        });
+    if (query.data) {
+      baseRevRef.current = query.data.desired.revision;
+      if (!debounceRef.current && !pendingSend) {
+        setDraft(null);
       }
-      const savedPresets = JSON.parse(localStorage.getItem(LED_PRESETS_STORAGE_KEY) ?? "null");
-      if (Array.isArray(savedPresets) && savedPresets.length > 0) {
-        setPresets(savedPresets);
-      }
-    } catch { /* ignore */ }
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      localStorage.setItem(LED_STORAGE_KEY, JSON.stringify(led));
-      localStorage.setItem(LED_PRESETS_STORAGE_KEY, JSON.stringify(presets));
-    } catch { /* ignore */ }
-  }, [led, presets, loaded]);
-
-  const setColor = (hue: number, sat: number) =>
-    setLed((s) => ({ ...s, on: true, hue, sat, preset: s.preset === "status" ? null : s.preset }));
-
-  const applyPreset = (id: string) => {
-    if (id === "status") {
-      setLed((s) => ({ ...s, on: true, effect: "solid", preset: "status" }));
-      return;
     }
-    const p = presets.find((x) => x.id === id);
-    if (p) setLed((s) => ({ ...s, on: true, hue: p.hue, sat: p.sat, brightness: p.brightness, effect: p.effect, speed: p.speed, preset: p.id }));
-  };
+  }, [query.data, pendingSend]);
 
-  const setBrightness = (v: number) =>
-    setLed((s) => ({ ...s, brightness: clampBrightness(v) }));
-
-  const setEffect = (effect: LedEffect) =>
-    setLed((s) => ({ ...s, on: true, effect, preset: s.preset === "status" ? null : s.preset }));
-
-  const setSpeed = (v: number) =>
-    setLed((s) => ({ ...s, speed: clampSpeed(v) }));
-
-  const savePreset = (name: string) => {
-    const created = buildCustomPreset(name, led);
-    if (!created) return false;
-    setPresets((list) => [...list, created]);
-    setLed((s) => ({ ...s, preset: created.id }));
-    return true;
-  };
-
-  const updatePreset = (id: string) => {
-    setPresets((list) =>
-      list.map((p) => {
-        if (p.id !== id) return p;
-        const { swatch: _, ...rest } = p;
-        return { ...rest, hue: Math.round(led.hue), sat: Math.round(led.sat), brightness: led.brightness, effect: led.effect, speed: led.speed };
+  const sendMutation = useMutation({
+    mutationFn: async (vars: { state: LedState; force?: boolean }) =>
+      setDesired({
+        data: {
+          baseRevision: baseRevRef.current,
+          requestId: makeRequestId(),
+          state: vars.state,
+          ...(vars.force ? { force: true } : {}),
+        },
       }),
-    );
+    onMutate: () => setPendingSend(true),
+    onSuccess: (res) => {
+      baseRevRef.current = res.revision;
+      if (res.outcome === "stale") {
+        toast.warning("Lights were changed on another screen — refreshed to latest.");
+        setDraft(null);
+      }
+      queryClient.invalidateQueries({ queryKey: LED_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Could not send LED update");
+    },
+    onSettled: () => setPendingSend(false),
+  });
+
+  const led = draft ?? serverState;
+
+  const sendNow = useCallback(
+    (next: LedState, force = false) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      pendingStateRef.current = null;
+      setDraft(next);
+      sendMutation.mutate({ state: next, force });
+    },
+    [sendMutation],
+  );
+
+  const sendDebounced = useCallback(
+    (next: LedState) => {
+      setDraft(next);
+      pendingStateRef.current = next;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        debounceRef.current = null;
+        const s = pendingStateRef.current;
+        pendingStateRef.current = null;
+        if (s) sendMutation.mutate({ state: s });
+      }, SLIDER_DEBOUNCE_MS);
+    },
+    [sendMutation],
+  );
+
+  const flushPending = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    const s = pendingStateRef.current;
+    pendingStateRef.current = null;
+    if (s) sendMutation.mutate({ state: s });
+  }, [sendMutation]);
+
+  const patchImmediate = useCallback(
+    (patch: Partial<LedState>, force = false) => {
+      const next: LedState = { ...led, ...patch, calibrationProbe: null };
+      sendNow(next, force);
+    },
+    [led, sendNow],
+  );
+
+  const patchDebounced = useCallback(
+    (patch: Partial<LedState>) => {
+      const next: LedState = { ...led, ...patch, calibrationProbe: null };
+      sendDebounced(next);
+    },
+    [led, sendDebounced],
+  );
+
+  const turnOff = useCallback(() => {
+    sendNow({ ...led, on: false, calibrationProbe: null }, true);
+  }, [led, sendNow]);
+
+  const applyPreset = useCallback(
+    (id: string) => {
+      if (id === "status") {
+        patchImmediate({ on: true, effect: "solid", preset: "status" });
+        return;
+      }
+      const p = query.data?.presets.find((x) => x.id === id);
+      if (!p) return;
+      patchImmediate({ on: true, ...p.state, preset: p.id });
+    },
+    [patchImmediate, query.data?.presets],
+  );
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: LED_QUERY_KEY });
+
+  const savePreset = async (name: string) => {
+    try {
+      const created = await savePresetCall({ data: { name, state: led } });
+      await invalidate();
+      patchImmediate({ preset: created.id });
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save preset");
+      return false;
+    }
   };
 
-  const deletePreset = (id: string) => {
-    setPresets((list) => list.filter((p) => p.id !== id));
-    setLed((s) => (s.preset === id ? { ...s, preset: null } : s));
+  const updatePreset = async (id: string) => {
+    try {
+      await updatePresetCall({ data: { id, state: led } });
+      await invalidate();
+      toast.success("Preset updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update preset");
+    }
   };
 
-  const toggle = () => setLed((s) => ({ ...s, on: !s.on }));
+  const renamePreset = async (id: string, name: string) => {
+    try {
+      await renamePresetCall({ data: { id, name } });
+      await invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not rename preset");
+    }
+  };
 
-  return { led, presets, setColor, applyPreset, setBrightness, setEffect, setSpeed, savePreset, updatePreset, deletePreset, toggle };
+  const duplicatePreset = async (id: string) => {
+    try {
+      const copy = await duplicatePresetCall({ data: { id } });
+      await invalidate();
+      patchImmediate({ preset: copy.id });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not duplicate preset");
+    }
+  };
+
+  const deletePreset = async (id: string) => {
+    try {
+      await deletePresetCall({ data: { id } });
+      await invalidate();
+      if (led.preset === id) patchImmediate({ preset: null });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete preset");
+    }
+  };
+
+  const rotateToken = async () => {
+    const res = await rotateTokenCall();
+    await invalidate();
+    return res;
+  };
+
+  const revokeToken = async () => {
+    await revokeTokenCall();
+    await invalidate();
+    toast.success("Device token revoked");
+  };
+
+  const saveCalibration = async (groupCount: number, direction: 1 | -1) => {
+    await saveCalCall({ data: { groupCount, direction } });
+    await invalidate();
+    toast.success(`Saved ${groupCount} groups`);
+  };
+
+  const probeCalibration = (indices: number[], brightness = 18) => {
+    sendNow({ ...led, on: true, calibrationProbe: { indices, brightness } }, true);
+  };
+
+  const reported = query.data?.reported ?? {
+    appliedRevision: 0,
+    bootId: null,
+    controllerVersion: null,
+    status: "offline",
+    lastError: null,
+    heartbeatAt: null,
+  };
+  const sync = computeSyncStatus(serverRevision, reported, pendingSend || Boolean(debounceRef.current));
+
+  return {
+    led,
+    presets: (query.data?.presets ?? []) as LedPreset[],
+    device: query.data?.device ?? null,
+    reported,
+    revision: serverRevision,
+    sync,
+    browserOffline: query.isError,
+    patchImmediate,
+    patchDebounced,
+    flushPending,
+    turnOff,
+    applyPreset,
+    savePreset,
+    updatePreset,
+    renamePreset,
+    duplicatePreset,
+    deletePreset,
+    rotateToken,
+    revokeToken,
+    saveCalibration,
+    probeCalibration,
+  };
 }

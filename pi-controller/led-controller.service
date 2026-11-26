@@ -1,0 +1,18 @@
+[Unit]
+Description=Workshop Bar Counter LED Controller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=LED_API_URL=https://benchside-status-bloom.lovable.app
+Environment=LED_TOKEN_FILE=/etc/led-controller/token
+ExecStart=/home/rgablowski/led-test-venv/bin/python /opt/led-controller/controller.py
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
